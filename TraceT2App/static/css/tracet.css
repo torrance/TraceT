@@ -1,0 +1,68 @@
+:root {
+  --width-content: 1200px;
+}
+
+nav {
+    margin-bottom: 0;
+}
+
+main {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+table, thead, tbody {
+    width: 100%;
+}
+
+td:last-child {
+    width:100%;
+    text-align: right;
+}
+
+form, textarea {
+    max-width: unset;
+}
+
+fieldset:has(input[type="date"][name="created_before"]) {
+    border: none;
+
+    legend {
+        font-weight: bold;
+    }
+}
+
+input[type="date"][name="created_before"],
+input[type="date"][name="created_after"] {
+    display: inline-block;
+}
+
+span.vote {
+    height: 25px;
+    width: 25px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+span.vote.pass {
+    background-color: #309303;
+    background-color: #69b764;
+}
+
+span.vote.maybe {
+    background-color: #dba13a;
+    background-color: #ffc156;
+}
+
+span.vote.fail {
+    background-color: #b10318;
+    background-color: #d82526;
+}
+
+span.vote.error {
+    background-color: grey;
+}
+
+span.vote.inherited {
+    opacity: 0.3;
+}

@@ -1,0 +1,13 @@
+{% extends "TraceT2App/base.html" %}
+
+{% block title %}Event {{ event.id }}{% endblock %}
+
+{% block content %}
+<h1>Event {{ event.id }}</h1>
+
+<p>{{ event.created }}</p>
+
+<p>Stream: <code>{{ event.stream }}</code></p>
+
+<pre style="overflow: scroll;">{{ event.pretty_payload }}</pre>
+{% endblock %}

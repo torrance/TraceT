@@ -1,0 +1,40 @@
+import logging
+
+from django.core.management.base import BaseCommand
+from gcn_kafka import Consumer
+
+from TraceT2App.models import Event, GCNStream
+
+logger = logging.getLogger(__name__)
+
+
+class Command(BaseCommand):
+    help = "Start listening to GCN events"
+
+    def handle(self, *args, **kwargs):
+        # We periodically reconnect to GCN every ~10 minutes so that we pick up any
+        # new streams that may have been added in the meantime.
+        while True:
+            logging.info("Creating new GCN consumer...")
+            streams = list(map(lambda s: s.name, GCNStream.objects.all()))
+
+            consumer = Consumer(
+                client_id="36drla0hks7njn1bkfhvir7iaq",
+                client_secret="138mt2l6agb13cq0vli7g8v5rut6n18hmlr21u4r31hjbh5n5feg",
+            )
+            consumer.subscribe(streams)
+
+            for _ in range(300):
+                for message in consumer.consume(timeout=1):
+                    logging.info(f"Recieved a new message ({message.topic()} #{message.offset()})")
+                    logger.info(f"{type(message.value())}")
+                    if message.error():
+                        logging.warning(message.error())
+                    else:
+                        try:
+                            stream = GCNStream.objects.get(name=message.topic())
+                            event = Event(stream=stream, payload=message.value(), istest=False)
+                            event.full_clean()
+                            event.save()
+                        except Exception as e:
+                            logging.warning("Error saving new GCNEvent:", exc_info=e)

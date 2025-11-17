@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TraceT | {% block title %}{% endblock %}</title>
+    <link href="{% static 'css/mvp.css' %}" rel="stylesheet">
+    <link href="{% static 'css/tracet.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div style="display: flex; align-items: center;">
+                <img src="{% static 'logo.png' %}" width=60 alt="TraceT Logo">
+                <ul style="padding: 0 2rem;">
+                    <li>TraceT</li>
+                    <li>
+                        Events
+                        <ul>
+                            <li><a href="{% url 'events' %}">View all events</a></li>
+                            <li><a href="{% url 'eventcreate' %}">Create test event</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        Triggers
+                        <ul>
+                            <li>Create</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+                            <ul>
+                    <li>Login</li>
+                </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

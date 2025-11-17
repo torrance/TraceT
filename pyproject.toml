@@ -1,0 +1,17 @@
+[project]
+name = "tracet2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "astropy>=7.1.1",
+    "django>=5.2.7",
+    "django-filter>=25.2",
+    "gcn-kafka>=0.3.4",
+    "jsonpath-rfc9535>=0.1.6",
+    "lxml>=6.0.2",
+    "python-dateutil>=2.9.0.post0",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+]

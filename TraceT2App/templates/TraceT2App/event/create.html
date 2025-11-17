@@ -1,0 +1,14 @@
+{% extends "TraceT2App/base.html" %}
+
+{% block title %}Create test event{% endblock %}
+
+{% block content %}
+
+<h1>Create a new test event</h1>
+
+<form action="{% url 'eventcreate' %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Create">
+</form>
+{% endblock %}

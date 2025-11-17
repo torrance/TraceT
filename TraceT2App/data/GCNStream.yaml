@@ -1,0 +1,235 @@
+- model: TraceT2App.gcnstream
+  pk: 1
+  fields:
+    name: gcn.classic.voevent.AMON_NU_EM_COINC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 2
+  fields:
+    name: gcn.classic.voevent.FERMI_GBM_ALERT
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 3
+  fields:
+    name: gcn.classic.voevent.FERMI_GBM_FIN_POS
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 4
+  fields:
+    name: gcn.classic.voevent.FERMI_GBM_FLT_POS
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 5
+  fields:
+    name: gcn.classic.voevent.FERMI_GBM_GND_POS
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 6
+  fields:
+    name: gcn.classic.voevent.FERMI_GBM_POS_TEST
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 7
+  fields:
+    name: gcn.classic.voevent.FERMI_GBM_SUBTHRESH
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 8
+  fields:
+    name: gcn.classic.voevent.FERMI_LAT_MONITOR
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 9
+  fields:
+    name: gcn.classic.voevent.FERMI_LAT_OFFLINE
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 10
+  fields:
+    name: gcn.classic.voevent.FERMI_LAT_POS_TEST
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 11
+  fields:
+    name: gcn.classic.voevent.FERMI_POINTDIR
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 12
+  fields:
+    name: gcn.classic.voevent.LVC_EARLY_WARNING
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 13
+  fields:
+    name: gcn.classic.voevent.LVC_INITIAL
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 14
+  fields:
+    name: gcn.classic.voevent.LVC_PRELIMINARY
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 15
+  fields:
+    name: gcn.classic.voevent.LVC_UPDATE
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 16
+  fields:
+    name: gcn.classic.voevent.LVC_RETRACTION
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 17
+  fields:
+    name: gcn.classic.voevent.SWIFT_ACTUAL_POINTDIR
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 18
+  fields:
+    name: gcn.classic.voevent.SWIFT_BAT_GRB_LC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 19
+  fields:
+    name: gcn.classic.voevent.SWIFT_BAT_GRB_POS_ACK
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 20
+  fields:
+    name: gcn.classic.voevent.SWIFT_BAT_GRB_POS_TEST
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 21
+  fields:
+    name: gcn.classic.voevent.SWIFT_BAT_QL_POS
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 22
+  fields:
+    name: gcn.classic.voevent.SWIFT_BAT_SCALEDMAP
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 23
+  fields:
+    name: gcn.classic.voevent.SWIFT_BAT_TRANS
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 24
+  fields:
+    name: gcn.classic.voevent.SWIFT_FOM_OBS
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 25
+  fields:
+    name: gcn.classic.voevent.SWIFT_POINTDIR
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 26
+  fields:
+    name: gcn.classic.voevent.SWIFT_SC_SLEW
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 27
+  fields:
+    name: gcn.classic.voevent.SWIFT_TOO_FOM
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 28
+  fields:
+    name: gcn.classic.voevent.SWIFT_TOO_SC_SLEW
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 29
+  fields:
+    name: gcn.classic.voevent.SWIFT_UVOT_DBURST
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 30
+  fields:
+    name: gcn.classic.voevent.SWIFT_UVOT_DBURST_PROC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 31
+  fields:
+    name: gcn.classic.voevent.SWIFT_UVOT_EMERGENCY
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 32
+  fields:
+    name: gcn.classic.voevent.SWIFT_UVOT_FCHART
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 33
+  fields:
+    name: gcn.classic.voevent.SWIFT_UVOT_FCHART_PROC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 34
+  fields:
+    name: gcn.classic.voevent.SWIFT_UVOT_POS
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 35
+  fields:
+    name: gcn.classic.voevent.SWIFT_UVOT_POS_NACK
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 36
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_CENTROID
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 37
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_IMAGE
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 38
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_IMAGE_PROC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 39
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_LC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 40
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_POSITION
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 41
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_SPECTRUM
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 42
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_SPECTRUM_PROC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 43
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_SPER
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 44
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_SPER_PROC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 45
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_THRESHPIX
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 46
+  fields:
+    name: gcn.classic.voevent.SWIFT_XRT_THRESHPIX_PROC
+    type: xml
+- model: TraceT2App.gcnstream
+  pk: 47
+  fields:
+    name: gcn.notices.einstein_probe.wxt.alert
+    type: json

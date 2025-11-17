@@ -1,0 +1,36 @@
+{% extends "TraceT2App/base.html" %}
+
+{% block title %}Edit trigger {{ trigger.id }}{% endblock %}
+
+{% block content %}
+
+<h1>Edit trigger {{trigger.id }}</h1>
+
+<form action="{% url 'triggeredit' id=trigger.id %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <fieldset>
+        <legend>Conditions</legend>
+        {{ rangeformset.management_form }}
+
+        {% for form in rangeformset %}
+            <fieldset>
+                <legend>Numeric range</legend>
+                {{ form }}
+            </fieldset>
+
+        {% endfor %}
+
+        {{ booleanformset.management_form }}
+
+        {% for form in booleanformset %}
+            <fieldset>
+                <legend>Boolean</legend>
+                {{ form }}
+            </fieldset>
+        {% endfor %}
+        <!-- {{ booleanformset.empty_form }} -->
+    </fieldset>
+    <input type="submit" value="Save">
+</form>
+{% endblock %}

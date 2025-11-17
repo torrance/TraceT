@@ -1,0 +1,65 @@
+{% extends "TraceT2App/base.html" %}
+
+{% block title %}Trigger {{ trigger.id }}{% endblock %}
+
+{% block content %}
+
+<h1>Trigger {{ trigger.id }}</h1>
+
+<p></p><a href="{% url 'triggeredit' id=trigger.id %}">Edit trigger</a><p></p>
+
+<h2>Streams</h2>
+
+<ul>
+    {% for stream in trigger.streams.all %}
+    <li><code>{{ stream }}</code></li>
+    {% endfor %}
+</ul>
+
+<p><strong>Group by:</strong> <code>{{ trigger.groupby }}</code></p>
+
+<h2>Metadata</h2>
+
+<ul>
+    <li><strong>RA Path:</strong> <code>{{ trigger.ra_path }}</code></li>
+    <li><strong>Dec Path:</strong> <code>{{ trigger.dec_path }}</code></li>
+    <li><strong>Time Path:</strong> <code>{{ trigger.time_path }}</code></li>
+</ul>
+
+
+<h2>Conditions</h2>
+
+<ul>
+    {% for condition in conditions %}
+    <li><code>{{ condition }}</code></li>
+    {% endfor %}
+</ul>
+
+<h2>Archival replay</h2>
+
+{% for eventgroup in eventgroups %}
+<h3>Group ID: {{ eventgroup.groupid }}</h3>
+
+<p>Initial time: {{ eventgroup.time | date:"Y-M-d G:i:s e" }}</p>
+
+<table>
+    <thead>
+        <tr><th>Received</th><th style="text-align: left;">Stream</th><th></th><th>Position</th><th colspan="{{ eventgroup.eventss.0.votes | length }}">Conditions</th></tr>
+    </thead>
+    <tbody>
+        {% for event in eventgroup.eventss %}
+        <tr>
+            <td>{{ event.created | date:"Y-M-d G:i e" }}</td>
+            <td style="text-align: left"><code>{{ event.stream.name }}</code> {% if event.istest %}(Test){% endif %}</td>
+            <td><a href="{{ event.get_absolute_url }}">View event</a></td>
+            <td>{{ event.pointing.ra.deg }}, {{ event.pointing.dec.deg }}</td>
+            {% for vote in event.votes %}
+            <td>{{ vote.html }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+    </tbody>
+</table>
+{% endfor %}
+{% endblock %}
