@@ -3,11 +3,12 @@ import logging
 from django.core.paginator import EmptyPage, Paginator
 from django.forms import formset_factory, modelformset_factory, inlineformset_factory
 from django.shortcuts import (
-    render,
     get_object_or_404,
     get_list_or_404,
-    HttpResponseRedirect,
+    render,
     resolve_url,
+    HttpResponseRedirect,
+    HttpResponse,
 )
 from django.views import View
 
@@ -17,55 +18,60 @@ from . import models, forms, filters
 logger = logging.getLogger(__name__)
 
 
-class Event(View):
+class Notice(View):
     def get(self, request, id):
-        event = get_object_or_404(models.Event, id=id)
+        notice = get_object_or_404(models.Notice, id=id)
         return render(
             request,
-            "TraceT2App/event/get.html",
-            {"event": event},
+            "TraceT2App/notice/get.html",
+            {"notice": notice},
         )
 
 
-class EventList(View):
+class NoticeList(View):
     def get(self, request):
-        filter = filters.Event(request.GET, models.Event.objects.order_by("-created"))
+        filter = filters.Notice(
+            request.GET,
+            models.Notice.objects.order_by("-created").select_related("stream"),
+        )
 
         paginator = Paginator(filter.qs, 100)
         pagenumber = request.GET.get("page", 1)
 
         try:
-            events = paginator.page(pagenumber)
+            notices = paginator.page(pagenumber)
         except EmptyPage:
             # If out of range, display last page
-            events = paginator.page(paginator.num_pages)
+            notices = paginator.page(paginator.num_pages)
 
         return render(
-            request, "TraceT2App/event/list.html", {"events": events, "filter": filter}
+            request,
+            "TraceT2App/notice/list.html",
+            {"notices": notices, "filter": filter},
         )
 
 
-class EventCreate(View):
+class NoticeCreate(View):
     def get(self, request):
-        form = forms.Event()
-        return render(request, "TraceT2App/event/create.html", {"form": form})
+        form = forms.Notice()
+        return render(request, "TraceT2App/notice/create.html", {"form": form})
 
     def post(self, request):
-        form = forms.Event(request.POST)
+        form = forms.Notice(request.POST)
 
         if form.is_valid():
-            e = models.Event(
+            n = models.Notice(
                 stream=form.cleaned_data["stream"],
                 created=form.cleaned_data["created"],
                 payload=form.cleaned_data["payload"].encode(),
                 istest=True,
             )
-            e.full_clean()
-            e.save()
+            n.full_clean()
+            n.save()
 
-            return HttpResponseRedirect(e.get_absolute_url())
+            return HttpResponseRedirect(n.get_absolute_url())
         else:
-            return render(request, "TraceT2App/event/create.html", {"form": form})
+            return render(request, "TraceT2App/notice/create.html", {"form": form})
 
 
 class TriggerCreate(View):
@@ -161,21 +167,25 @@ class TriggerEdit(View):
 
 class Trigger(View):
     def get(self, request, id):
-        trigger = get_object_or_404(
-            models.Trigger,
-            id=id,
-        )
+        trigger = get_object_or_404(models.Trigger, id=id)
 
-        eventgroups = trigger.eventgroup_set.order_by("-time")
+        events = trigger.event_set.order_by("-time")
 
-        for eventgroup in eventgroups:
-            events = []
-            for event in eventgroup.events.order_by("created"):
-                event.pointing = eventgroup.pointing(attime=event.created)
-                event.votes = eventgroup.evaluateconditions(attime=event.created)
-                events.append(event)
+        for event in events:
+            notices = []
+            for notice in event.notices.order_by("created"):
+                with models.Event.now.set(
+                    notice.created
+                ) and models.Event.testing.set(True):
+                    notice.pointing = event.pointing()
+                    notice.votes = event.evaluateconditions()
+                notices.append(notice)
 
-            eventgroup.eventss = events
+            event.noticess = notices
+
+            event.form = forms.EventTrigger(
+                initial={"eventid": event.id}
+            )
 
         return render(
             request,
@@ -183,6 +193,21 @@ class Trigger(View):
             {
                 "trigger": trigger,
                 "conditions": trigger.get_conditions(),
-                "eventgroups": eventgroups,
+                "events": events,
             },
         )
+
+    def post(self, request, id):
+        trigger = get_object_or_404(models.Trigger, id=id)
+
+        form = forms.EventTrigger(request.POST)
+
+        if form.is_valid():
+            event = trigger.event_set.get(
+                id=form.cleaned_data["eventid"]
+            )
+            event.runtrigger()
+
+            return HttpResponseRedirect(trigger.get_absolute_url())
+        else:
+            return HttpResponse("Bad Request", status=400)

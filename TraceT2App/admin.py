@@ -8,8 +8,8 @@ class GCNStream(admin.ModelAdmin):
     list_display = ["name", "type"]
 
 
-@admin.register(models.Event)
-class Event(admin.ModelAdmin):
+@admin.register(models.Notice)
+class Notice(admin.ModelAdmin):
     list_display = ["stream", "file_type", "created"]
     readonly_fields = ["stream", "created", "pretty_payload"]
     exclude = ["payload"]
@@ -25,9 +25,14 @@ class BooleanCondition(admin.TabularInline):
     extra = 0
     can_move = True
 
+class ContainsCondition(admin.TabularInline):
+    model = models.ContainsCondition
+    extra = 0
+    can_move = True
+
 class MWA(admin.StackedInline):
     model = models.MWA
 
 @admin.register(models.Trigger)
 class Trigger(admin.ModelAdmin):
-    inlines = [NumericRangeCondition, BooleanCondition, MWA]
+    inlines = [NumericRangeCondition, BooleanCondition, ContainsCondition, MWA]

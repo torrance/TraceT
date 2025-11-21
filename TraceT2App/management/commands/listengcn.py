@@ -3,13 +3,13 @@ import logging
 from django.core.management.base import BaseCommand
 from gcn_kafka import Consumer
 
-from TraceT2App.models import Event, GCNStream
+from TraceT2App.models import Notice, GCNStream
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Start listening to GCN events"
+    help = "Start listening to GCN notices"
 
     def handle(self, *args, **kwargs):
         # We periodically reconnect to GCN every ~10 minutes so that we pick up any
@@ -33,8 +33,8 @@ class Command(BaseCommand):
                     else:
                         try:
                             stream = GCNStream.objects.get(name=message.topic())
-                            event = Event(stream=stream, payload=message.value(), istest=False)
-                            event.full_clean()
-                            event.save()
+                            notice = Notice(stream=stream, payload=message.value(), istest=False)
+                            notice.full_clean()
+                            notice.save()
                         except Exception as e:
-                            logging.warning("Error saving new GCNEvent:", exc_info=e)
+                            logging.warning("Error saving new Notice:", exc_info=e)

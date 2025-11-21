@@ -37,15 +37,7 @@ class NumericRangeCondition(forms.ModelForm):
         fields = ["selector", "val1", "val2"]
 
 
-class EventFilter(forms.Form):
-    stream = forms.ModelMultipleChoiceField(
-        label="Stream",
-        queryset=models.GCNStream.objects.order_by("name"),
-        required=False,
-    )
-
-
-class Event(forms.Form):
+class Notice(forms.Form):
     stream = forms.ModelChoiceField(
         queryset=models.GCNStream.objects.order_by("name"),
         required=True,
@@ -65,12 +57,12 @@ class Event(forms.Form):
     )
 
     def clean(self):
-        e = models.Event(
+        n = models.Notice(
             stream=self.cleaned_data["stream"],
             payload=self.cleaned_data["payload"].encode(),
         )
         try:
-            e.query(".")
+            n.query(".")
         except etree.XMLSyntaxError:
             raise forms.ValidationError(
                 "Unable to parse the payload as XML", code="invalid"
@@ -79,3 +71,7 @@ class Event(forms.Form):
             raise forms.ValidationError(
                 "Unable to parse the payload as JSON", code="invalid"
             )
+
+
+class EventTrigger(forms.Form):
+    eventid = forms.IntegerField(widget=forms.HiddenInput)

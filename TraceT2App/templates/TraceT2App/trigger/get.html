@@ -37,23 +37,31 @@
 
 <h2>Archival replay</h2>
 
-{% for eventgroup in eventgroups %}
-<h3>Group ID: {{ eventgroup.groupid }}</h3>
+{% for event in events %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+    <h3 style="display: inline-block;">Event ID: {{ event.groupid }}</h3>
 
-<p>Initial time: {{ eventgroup.time | date:"Y-M-d G:i:s e" }}</p>
+    <p style="display: inline-block; width: unset;">{{ event.time | date:"Y-M-d G:i:s e" }}</p>
+
+    <form method="post" style="display: inline-block; min-width: unset; padding: 0; border: none;">
+        {% csrf_token %}
+        {{ event.form }}
+        <input style="padding: 0; margin: 0;" type="submit" value="Retrigger" onclick="return confirm('Are you sure? Retriggering this event group may result in observation requests being sent.');">
+    </form>
+</div>
 
 <table>
     <thead>
-        <tr><th>Received</th><th style="text-align: left;">Stream</th><th></th><th>Position</th><th colspan="{{ eventgroup.eventss.0.votes | length }}">Conditions</th></tr>
+        <tr><th>Received</th><th style="text-align: left;">Stream</th><th></th><th>Position</th><th colspan="{{ event.noticess.0.votes | length }}">Conditions</th></tr>
     </thead>
     <tbody>
-        {% for event in eventgroup.eventss %}
+        {% for notice in event.noticess %}
         <tr>
-            <td>{{ event.created | date:"Y-M-d G:i e" }}</td>
-            <td style="text-align: left"><code>{{ event.stream.name }}</code> {% if event.istest %}(Test){% endif %}</td>
-            <td><a href="{{ event.get_absolute_url }}">View event</a></td>
-            <td>{{ event.pointing.ra.deg }}, {{ event.pointing.dec.deg }}</td>
-            {% for vote in event.votes %}
+            <td>{{ notice.created | date:"Y-M-d G:i e" }}</td>
+            <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
+            <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
+            <td>{{ notice.pointing.ra.deg }}, {{ notice.pointing.dec.deg }}</td>
+            {% for vote in notice.votes %}
             <td>{{ vote.html }}</td>
             {% endfor %}
         </tr>
