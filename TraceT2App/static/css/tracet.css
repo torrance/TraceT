@@ -66,3 +66,32 @@ span.vote.error {
 span.vote.inherited {
     opacity: 0.3;
 }
+
+span.gcn-status {
+    height: 0.5rem;
+    width: 0.5rem;
+    margin-bottom: 0.05rem;
+    margin-left: 0.2rem;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blinker 1.5s linear infinite;
+    overflow: hidden;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0.5;
+    }
+}
+
+span.gcn-status.ok {
+    background-color: #69b764;
+    color: #69b764;  /* fallback */
+    color: rgba(0, 0, 0, 0);
+}
+
+span.gcn-status.fail {
+    background-color: #d82526;
+    color: #d82526;  /* fallback */
+    color: rgba(0, 0, 0, 0);
+}
