@@ -74,7 +74,7 @@ class Event(models.Model):
     # Context variables
     # In debugging, we want to evaluate the Event as if it were run in the past
     now: contextvars.ContextVar[datetime.datetime] = contextvars.ContextVar(
-        "now", default=datetime.datetime.max
+        "now", default=datetime.datetime.max.replace(tzinfo=datetime.UTC)
     )
     # Are we currently testing?
     testing = contextvars.ContextVar("testing", default=False)
