@@ -88,7 +88,7 @@ class Event(models.Model):
         return f"Event(Trigger={self.trigger.id} GroupID={self.groupid})"
 
     def get_notices(self, ignoretest: bool = True) -> list[Notice]:
-        notices = self.notices.order_by("-created").filter(
+        notices = self.notices.order_by("created").filter(
             created__lte=Event.now.get()
         )
         if not Event.testing.get():
