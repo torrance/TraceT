@@ -1,4 +1,4 @@
 from .notice import GCNStream, Notice
-from .trigger import Trigger, Event
-from .conditions import NumericRangeCondition, BooleanCondition, ContainsCondition
+from .trigger import Observation, Event, Trigger
+from .conditions import BooleanCondition, ContainsCondition, NumericRangeCondition
 from .telescopes import MWA

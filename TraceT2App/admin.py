@@ -7,7 +7,6 @@ from . import models
 class GCNStream(admin.ModelAdmin):
     list_display = ["name", "type"]
 
-
 @admin.register(models.Notice)
 class Notice(admin.ModelAdmin):
     list_display = ["stream", "file_type", "created"]
@@ -32,6 +31,10 @@ class ContainsCondition(admin.TabularInline):
 
 class MWA(admin.StackedInline):
     model = models.MWA
+
+@admin.register(models.Observation)
+class Observation(admin.ModelAdmin):
+    pass
 
 @admin.register(models.Trigger)
 class Trigger(admin.ModelAdmin):

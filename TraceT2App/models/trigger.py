@@ -2,12 +2,14 @@ import contextvars
 import datetime
 import logging
 from typing import Optional
+from warnings import deprecated
 
 from astropy.coordinates import SkyCoord
 
 from django.db import models
 from django.core import mail
 from django.urls import reverse
+from django.utils import timezone
 
 from TraceT2App.models import GCNStream, Notice
 import TraceT2App.vote as vote
@@ -26,9 +28,10 @@ class Trigger(models.Model):
             )
 
     name = models.CharField(max_length=250)
+    priority = models.IntegerField(default=0)
     active = models.BooleanField(
         default=False,
-        help_text="Is this trigger active? Set to inactive during testing to avoid sending spurious triggers to observatories.",
+        help_text="Inactive triggers will send observation requests to observatories marked as testing only.",
     )
     streams = models.ManyToManyField(GCNStream)
     groupby = models.CharField(max_length=500)
@@ -60,6 +63,11 @@ class Trigger(models.Model):
             *self.containscondition_set.all(),
         ]
 
+    def get_telescopes(self):
+        return [
+            self.mwa,
+        ]
+
 
 class Event(models.Model):
     class Manager(models.Manager):
@@ -88,14 +96,21 @@ class Event(models.Model):
         return f"Event(Trigger={self.trigger.id} GroupID={self.groupid})"
 
     def get_notices(self, ignoretest: bool = True) -> list[Notice]:
-        notices = self.notices.order_by("created").filter(
-            created__lte=Event.now.get()
-        )
+        notices = self.notices.order_by("created").filter(created__lte=Event.now.get())
         if not Event.testing.get():
             notices = notices.filter(istest=False)
 
         return list(notices)
 
+    def querylatest(self, query):
+        for notice in self.get_notices():
+            result = notice.query(query)
+            if result is not None:
+                return result
+
+        return None
+
+    @deprecated("RA/Dec queries are to be moved to the Telescope object")
     def pointing(self) -> Optional[SkyCoord]:
         for notice in self.get_notices():
             ra = notice.query(self.trigger.ra_path)
@@ -105,6 +120,7 @@ class Event(models.Model):
         else:
             return None
 
+    @deprecated("RA/Dec queries are to be moved to the Telescope object")
     def getpointing(self) -> tuple[Optional[SkyCoord], bool]:
         pointing = None
         isnew = False
@@ -158,16 +174,39 @@ class Event(models.Model):
 
     def runtrigger(self):
         if self.evaluate():
-            notice = self.get_notices().pop()
+            for telescope in self.trigger.get_telescopes():
+                observation = (
+                    Observation.objects.filter(
+                        success=True,
+                        istest=False,
+                        observatory=telescope.OBSERVATORY,
+                        finish__gte=timezone.now(),
+                    )
+                    .order_by("-finish")
+                    .first()
+                )
 
-            mail.send_mail(
-                "Event triggered!",
-                f"Trigger (id={self.trigger.id}) has been activated by Notice (id={notice.id}).",
-                "admin@tracet.duckdns.org",
-                ["torrance123@gmail.com"],
-                fail_silently=True,
-            )
+                if observation is None or observation.priority < self.trigger.priority:
+                    if observation := telescope.schedulenow(self):
+                        return observation
 
-            logger.warning(
-                f"Trigger (id={self.trigger.id}) has been activated by Notice (id={notice.id})."
-            )
+                # TODO
+                # Schedulenow only if:
+                # 1. Existing observation is owned by us
+                # 2. Pointing direction is substantially updated.
+
+        return False
+
+class Observation(models.Model):
+    trigger = models.ForeignKey(Trigger, null=True, on_delete=models.SET_NULL)
+    event = models.ForeignKey(Event, null=True, on_delete=models.SET_NULL)
+    start = models.DateTimeField(default=timezone.now)
+    finish = models.DateTimeField()
+    observatory = models.CharField(max_length=500)
+    priority = models.IntegerField()
+    success = models.BooleanField()
+    istest = models.BooleanField()
+    log = models.TextField()
+
+    def __bool__(self):
+        return self.success and not self.istest

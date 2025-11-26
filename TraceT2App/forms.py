@@ -14,21 +14,21 @@ class DateTimeInput(forms.DateTimeInput):
     input_type = "datetime-local"
 
 
-class Trigger(forms.ModelForm):
-    # active = forms.BooleanField(
-    #     label="Is trigger active?"
-    # )
+# class Trigger(forms.ModelForm):
+#     # active = forms.BooleanField(
+#     #     label="Is trigger active?"
+#     # )
 
-    # streams = forms.MultipleChoiceField(
-    #     label="GCN Streams"
-    # )
+#     # streams = forms.MultipleChoiceField(
+#     #     label="GCN Streams"
+#     # )
 
-    class Meta:
-        model = models.Trigger
-        fields = ["active", "streams", "groupby"]
-        widgets = {
-            # "streams": forms.CheckboxSelectMultiple
-        }
+#     class Meta:
+#         model = models.Trigger
+#         fields = ["active", "streams", "groupby"]
+#         widgets = {
+#             # "streams": forms.CheckboxSelectMultiple
+#         }
 
 
 class NumericRangeCondition(forms.ModelForm):
@@ -57,6 +57,8 @@ class Notice(forms.Form):
     )
 
     def clean(self):
+        super().clean()
+
         n = models.Notice(
             stream=self.cleaned_data["stream"],
             payload=self.cleaned_data["payload"].encode(),
