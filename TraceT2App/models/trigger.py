@@ -64,9 +64,7 @@ class Trigger(models.Model):
         ]
 
     def get_telescopes(self):
-        return [
-            self.mwa,
-        ]
+        return [self.mwa, self.atca]
 
 
 class Event(models.Model):

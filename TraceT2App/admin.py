@@ -1,11 +1,15 @@
+from nested_admin import NestedTabularInline, NestedModelAdmin, NestedStackedInline
+
 from django.contrib import admin
 
 # Register your models here.
 from . import models
 
+
 @admin.register(models.GCNStream)
 class GCNStream(admin.ModelAdmin):
     list_display = ["name", "type"]
+
 
 @admin.register(models.Notice)
 class Notice(admin.ModelAdmin):
@@ -13,29 +17,45 @@ class Notice(admin.ModelAdmin):
     readonly_fields = ["stream", "created", "pretty_payload"]
     exclude = ["payload"]
 
-class NumericRangeCondition(admin.TabularInline):
+
+class NumericRangeCondition(NestedTabularInline):
     model = models.NumericRangeCondition
     extra = 0
     can_move = True
 
 
-class BooleanCondition(admin.TabularInline):
+class BooleanCondition(NestedTabularInline):
     model = models.BooleanCondition
     extra = 0
     can_move = True
 
-class ContainsCondition(admin.TabularInline):
+
+class ContainsCondition(NestedTabularInline):
     model = models.ContainsCondition
     extra = 0
     can_move = True
 
-class MWA(admin.StackedInline):
+
+class MWA(NestedStackedInline):
     model = models.MWA
+
+
+class ATCABand(NestedTabularInline):
+    model = models.telescopes.ATCABand
+    extra = 1
+    can_move = False
+
+
+class ATCA(NestedStackedInline):
+    model = models.ATCA
+    inlines = [ATCABand]
+
 
 @admin.register(models.Observation)
 class Observation(admin.ModelAdmin):
     pass
 
+
 @admin.register(models.Trigger)
-class Trigger(admin.ModelAdmin):
-    inlines = [NumericRangeCondition, BooleanCondition, ContainsCondition, MWA]
+class Trigger(NestedModelAdmin):
+    inlines = [NumericRangeCondition, BooleanCondition, ContainsCondition, MWA, ATCA]

@@ -3,6 +3,7 @@ import json
 import logging
 
 from astropy.coordinates import SkyCoord
+from astropy.units import hourangle
 import requests
 
 from django.db import models
@@ -65,7 +66,9 @@ class MWA(models.Model):
 
             ra, dec = float(ra), float(dec)
         except Exception as e:
-            logger.error("An error occurred attempting to parse Ra,Dec values", exc_info=e)
+            logger.error(
+                "An error occurred attempting to parse RA,Dec values", exc_info=e
+            )
             return False
 
         istest = not self.trigger.active
@@ -94,11 +97,9 @@ class MWA(models.Model):
             success = False
             log = str(e)
 
-        finish = (
-            datetime.datetime.now(datetime.UTC) +
-            datetime.timedelta(
-                seconds=self.nobs * len(self.frequency.split()) * self.exposure + 120  # 120 is the default calibration time
-            )
+        finish = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
+            seconds=self.nobs * len(self.frequency.split()) * self.exposure
+            + 120  # 120 is the default calibration time
         )
 
         observation = Observation(
@@ -111,6 +112,132 @@ class MWA(models.Model):
             finish=finish,
             log=log,
         )
+        observation.full_clean()
         observation.save()
 
         return observation
+
+
+class ATCA(models.Model):
+    OBSERVATORY = "ATCA"
+
+    trigger = models.OneToOneField(
+        Trigger, related_name="%(class)s", on_delete=models.CASCADE
+    )
+    projectid = models.CharField(max_length=500)
+    http_username = models.CharField(max_length=500, verbose_name="HTTP Username")
+    http_password = models.CharField(max_length=500, verbose_name="HTTP Password")
+    email = models.EmailField(
+        help_text="The email address that was supplied in the NAPA proposal."
+    )
+    authentication_token = models.CharField(max_length=500)
+    maximum_lag = models.FloatField(
+        help_text="The maximum amount of time in the future we will allow the start time to be. [minute]"
+    )
+    minimum_exposure = models.IntegerField(
+        help_text="The minimum exposure time required for this trigger. The trigger will be rejected if ATCA cannot schedule a total exposure of at least this time. [minute]"
+    )
+    maximum_exposure = models.IntegerField(
+        help_text="The maximum exposure time required for this trigger. [minute]"
+    )
+
+    def __str__(self):
+        return "ATCA Configuration"
+
+    def schedulenow(self, event: Event):
+        def minutes_to_hms(minutes: float) -> str:
+            h = int(minutes // 60)
+            minutes -= h * 60
+
+            m = int(minutes)
+            minutes -= m
+
+            s = int(minutes * 60)
+
+            return f"{h:02d}:{m:02d}:{s:02d}"
+
+        try:
+            ra = event.querylatest(self.trigger.ra_path)
+            dec = event.querylatest(self.trigger.dec_path)
+            coord = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
+        except Exception as e:
+            logger.error(
+                "An error occurred attempting to parse RA,Dec values", exc_info=e
+            )
+            return False
+
+        istest = not self.trigger.active
+
+        params = dict(
+            email=self.email,
+            authenticationToken=self.authentication_token,
+            maximumLag=self.maximum_lag / 60,  # [minute] -> [hour]
+        )
+
+        if istest:
+            params |= dict(
+                test=istest,
+                emailOnly=self.email,  # Send all emails only to this email address (test mode only)
+                noTimeLimit=True,  # Assume that we can request an over-ride observation of any length (test mode only)
+                noScoreLimit=True,  # Assume that we can over-ride any observation (test mode only)
+            )
+
+        request = dict(
+            source="gamma ray burst",  # IS THIS ARBITRARY??
+            project=self.projectid,
+            minExposureLength=minutes_to_hms(self.minimum_exposure),
+            maxExposureLength=minutes_to_hms(self.maximum_exposure),
+            rightAscension=coord.ra.to_string(unit=hourangle, sep=":"),
+            declination=coord.dec.to_string(sep=":"),
+            scanType="Dwell",
+        )
+
+        for atcaband in self.atcaband_set.order_by("band"):
+            request[atcaband.get_band_display()] = dict(
+                use=True,
+                exposureLength=atcaband.exposure,
+                freq1=atcaband.freq1,
+                freq2=atcaband.freq2,
+            )
+
+        # Request is passed as a JSON string
+        params["request"] = json.dumps(request)
+
+        print(params)
+
+        response = requests.post(
+            "https://www.narrabri.atnf.csiro.au/cgi-bin/obstools/rapid_response/rapid_response_service.py",
+            params,
+        )
+
+        print(response)
+
+        return False
+
+
+class ATCABand(models.Model):
+    class Bands(models.IntegerChoices):
+        L3mm = 3, "3mm"
+        L7mm = 7, "6mm"
+        L15mm = 15, "15mm"
+        L4cm = 40, "4cm"
+        L16cm = 160, "16cm"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["atca", "band"], name="unique wavelength configuration"
+            )
+        ]
+
+    atca = models.ForeignKey(ATCA, on_delete=models.CASCADE)
+    band = models.IntegerField(choices=Bands)
+    exposure = models.IntegerField(
+        help_text="The exposure time of this reciever. Receivers will be continuously cycled up until the full scheduled slot is exhausted. [minute]"
+    )
+    freq1 = models.IntegerField(
+        help_text="Specify the central frequency for the first of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]"
+    )
+    freq2 = models.IntegerField(
+        help_text="Specify the central frequency for the second of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]"
+    )

@@ -8,6 +8,7 @@ dependencies = [
     "astropy>=7.1.1",
     "django>=5.2.7",
     "django-filter>=25.2",
+    "django-nested-admin>=4.1.6",
     "gcn-kafka>=0.3.4",
     "jsonpath-rfc9535>=0.1.6",
     "lxml>=6.0.2",
