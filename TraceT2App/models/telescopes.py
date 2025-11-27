@@ -15,6 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class MWA(models.Model):
+    class TileSet(models.TextChoices):
+        PHASE_ONE = "phase_one", "Phase 1"
+        P1_HEXES = "p1+hexes", "Phase 1 + Hexes"
+        P1_SOLAR = "p1+solar", "Phase 1 + Solar"
+        P2_COMPACT = "p2_compact", "Phase 2 Compact"
+        P2_EXTENDED = "p2_extended", "Phase 2 Extended"
+        T256 = "256T", "256 tiles"
+
     OBSERVATORY = "MWA"
 
     trigger = models.OneToOneField(
@@ -24,6 +32,10 @@ class MWA(models.Model):
     projectid = models.CharField(max_length=500)
     password = models.CharField(max_length=500)
     repointing_threshold = models.FloatField()
+    tileset = models.CharField(
+        choices=TileSet,
+        help_text="Select the set of tiles to use for this observation. More tiles gives better sensitivity but at the expense larger data requirements.",
+    )
     frequency = models.CharField(
         max_length=500,
         help_text=(
@@ -54,7 +66,6 @@ class MWA(models.Model):
             "events occurring after this window will be ignored. [second]"
         )
     )
-    # tileset = [all_on, phase_one, p1+hexes, p1+solar, p2_compact, p2_extended, 256T]
 
     def __str__(self):
         return "MWA Configuration"
@@ -76,11 +87,12 @@ class MWA(models.Model):
         params = dict(
             project_id=self.projectid,
             secure_key=self.password,
-            calibrator=True,  # CHECK
+            calibrator=True,  # Hard-coded to always make a calibrator observation.
             ra=ra,
             dec=dec,
-            avoidsun=True,  # CHECK
+            avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
+            tileset=self.tileset,
             pretend=istest,
         )
 
@@ -132,7 +144,7 @@ class ATCA(models.Model):
     )
     authentication_token = models.CharField(max_length=500)
     maximum_lag = models.FloatField(
-        help_text="The maximum amount of time in the future we will allow the start time to be. [minute]"
+        help_text="The maximum delay allowed for scheduling this observation. If the observation cannot be scheduled to start within this time, it will not be scheduled at all. [minute]"
     )
     minimum_exposure = models.IntegerField(
         help_text="The minimum exposure time required for this trigger. The trigger will be rejected if ATCA cannot schedule a total exposure of at least this time. [minute]"
