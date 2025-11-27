@@ -30,6 +30,7 @@ def rebuild_events(sender, instance, **kwargs):
             )
 
             event.notices.add(notice)
+            event.full_clean()
             event.save()
         else:
             logger.warning(f"Rebuilding event for Trigger(id={instance.id}) but unable to query groupid on notice(id={notice.id})")
