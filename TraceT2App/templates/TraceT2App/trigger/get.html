@@ -52,7 +52,7 @@
 
 <table>
     <thead>
-        <tr><th>Received</th><th style="text-align: left;">Stream</th><th></th><th>Position</th><th colspan="{{ event.noticess.0.votes | length }}">Conditions</th></tr>
+        <tr><th>Received</th><th style="text-align: left;">Stream</th><th></th><th colspan="{{ event.noticess.0.decision.factors.all | length }}">Conditions</th></tr>
     </thead>
     <tbody>
         {% for notice in event.noticess %}
@@ -60,9 +60,8 @@
             <td>{{ notice.created | date:"Y-M-d G:i e" }}</td>
             <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
             <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
-            <td>{{ notice.pointing.ra.deg }}, {{ notice.pointing.dec.deg }}</td>
-            {% for vote in notice.votes %}
-            <td>{{ vote.html }}</td>
+            {% for factor in notice.decision.factors.all %}
+            <td>{{ factor.html }}</td>
             {% endfor %}
         </tr>
         {% endfor %}

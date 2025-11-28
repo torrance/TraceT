@@ -7,11 +7,27 @@ from astropy.units import hourangle
 import requests
 
 from django.db import models
+from django.utils import timezone
 
-from TraceT2App.models import Event, Observation, Trigger
+from TraceT2App.models import Event, Trigger
 
 
 logger = logging.getLogger(__name__)
+
+
+class Observation(models.Model):
+    trigger = models.ForeignKey(Trigger, null=True, on_delete=models.SET_NULL)
+    event = models.ForeignKey(Event, null=True, on_delete=models.SET_NULL)
+    start = models.DateTimeField(default=timezone.now)
+    finish = models.DateTimeField()
+    observatory = models.CharField(max_length=500)
+    priority = models.IntegerField()
+    success = models.BooleanField()
+    istest = models.BooleanField()
+    log = models.TextField()
+
+    def __bool__(self):
+        return self.success and not self.istest
 
 
 class MWA(models.Model):
@@ -114,7 +130,7 @@ class MWA(models.Model):
             + 120  # 120 is the default calibration time
         )
 
-        observation = Observation(
+        return Observation.objects.create(
             trigger=self.trigger,
             event=event,
             observatory=self.OBSERVATORY,
@@ -124,10 +140,6 @@ class MWA(models.Model):
             finish=finish,
             log=log,
         )
-        observation.full_clean()
-        observation.save()
-
-        return observation
 
 
 class ATCA(models.Model):

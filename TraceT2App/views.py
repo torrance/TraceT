@@ -172,20 +172,13 @@ class Trigger(View):
         events = trigger.event_set.order_by("-time")
 
         for event in events:
-            notices = []
-            for notice in event.notices.order_by("created"):
-                with models.Event.now.set(
-                    notice.created
-                ) and models.Event.testing.set(True):
-                    notice.pointing = event.pointing()
-                    notice.votes = event.evaluateconditions()
-                notices.append(notice)
+            event.noticess = list(event.notices.order_by("created"))
+            for notice in event.noticess:
+                notice.decision = event.decisions.filter(
+                    created__lte=notice.created, simulated=True
+                ).first()
 
-            event.noticess = notices
-
-            event.form = forms.EventTrigger(
-                initial={"eventid": event.id}
-            )
+            event.form = forms.EventTrigger(initial={"eventid": event.id})
 
         return render(
             request,
@@ -203,10 +196,7 @@ class Trigger(View):
         form = forms.EventTrigger(request.POST)
 
         if form.is_valid():
-            event = trigger.event_set.get(
-                id=form.cleaned_data["eventid"]
-            )
-            event.runtrigger()
+            trigger.event_set.get(id=form.cleaned_data["eventid"]).runtrigger()
 
             return HttpResponseRedirect(trigger.get_absolute_url())
         else:

@@ -11,8 +11,8 @@ from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
 
+import TraceT2App.models
 from TraceT2App.models import GCNStream, Notice
-import TraceT2App.vote as vote
 
 
 logger = logging.getLogger(__name__)
@@ -50,11 +50,23 @@ class Trigger(models.Model):
     def get_absolute_url(self):
         return reverse("trigger", args=[self.id])
 
-    def get_event(self, notice: Notice) -> Optional["Event"]:
+    def get_or_create_event(self, notice: Notice) -> Optional["Event"]:
+        # Check if we are listening to this particular stream
+        if not self.streams.filter(id=notice.stream.id).exists():
+            return None
+
+        # Extract the group id (or return None if we can't find it)
         groupid = notice.query(self.groupby)
         if groupid is None:
+            logger.warning(
+                f"Processing Notice (id={notice.id}) for Trigger (id={self.id}) but unable to query groupid"
+            )
             return None
-        return self.event_set.filter(groupid=groupid).first()
+
+        # Return the event
+        event, _ = self.event_set.get_or_create(groupid=groupid)
+        event.notices.add(notice)
+        return event
 
     def get_conditions(self):
         return [
@@ -77,14 +89,6 @@ class Event(models.Model):
                 .select_related("trigger")
             )
 
-    # Context variables
-    # In debugging, we want to evaluate the Event as if it were run in the past
-    now: contextvars.ContextVar[datetime.datetime] = contextvars.ContextVar(
-        "now", default=datetime.datetime.max.replace(tzinfo=datetime.UTC)
-    )
-    # Are we currently testing?
-    testing = contextvars.ContextVar("testing", default=False)
-
     trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)
     notices = models.ManyToManyField(Notice)
     groupid = models.CharField(max_length=500)
@@ -93,118 +97,44 @@ class Event(models.Model):
     def __str__(self):
         return f"Event(Trigger={self.trigger.id} GroupID={self.groupid})"
 
-    def get_notices(self, ignoretest: bool = True) -> list[Notice]:
-        notices = self.notices.order_by("created").filter(created__lte=Event.now.get())
-        if not Event.testing.get():
-            notices = notices.filter(istest=False)
-
-        return list(notices)
-
     def querylatest(self, query):
-        for notice in self.get_notices():
+        for notice in self.notices.order_by("-created"):
             result = notice.query(query)
             if result is not None:
                 return result
 
         return None
 
-    @deprecated("RA/Dec queries are to be moved to the Telescope object")
-    def pointing(self) -> Optional[SkyCoord]:
-        for notice in self.get_notices():
-            ra = notice.query(self.trigger.ra_path)
-            dec = notice.query(self.trigger.dec_path)
-            if ra and dec:
-                return SkyCoord(ra, dec, unit=("deg", "deg"))
-        else:
-            return None
-
-    @deprecated("RA/Dec queries are to be moved to the Telescope object")
-    def getpointing(self) -> tuple[Optional[SkyCoord], bool]:
-        pointing = None
-        isnew = False
-        for tmax in [n.created for n in self.get_notices()]:
-            with Event.now.set(tmax):
-                isnew = False
-                if self.evaluate():
-                    newpointing = self.pointing()
-
-                    if newpointing is None:
-                        continue
-
-                    if (
-                        pointing is None
-                        or pointing.separation(newpointing).deg
-                        > self.repointing_threshold()
-                    ):
-                        pointing = newpointing
-                        isnew = True
-
-        return pointing, isnew
-
-    def evaluateconditions(self) -> list[vote.Vote]:
-        notices = self.get_notices()
-
-        if len(notices) == 0:
-            # Require at least one event
-            return [vote.Fail("No notices")]
-
-        # Initialize evaluations array with oldest notice
-        notice = notices.pop(0)
-        evaluations = [c.vote(notice) for c in self.trigger.get_conditions()]
-
-        # Append all addition evaluations from remaining notices
-        for notice in notices:
-            for i, c in enumerate(self.trigger.get_conditions()):
-                evaluations[i] += c.vote(notice)
-
-        return evaluations
-
-    def evaluate(self) -> bool:
-        # In case of no conditions, set default result as vote.Pass
-        # min() expects a minimum of 2 values, so we pass the default twice.
-        return bool(
-            min(
-                *self.evaluateconditions(),
-                vote.Pass(),
-                vote.Pass(),
-            )
+    def runtrigger(self):
+        decision = TraceT2App.models.Decision.objects.create(
+            event=self, simulated=False
         )
 
-    def runtrigger(self):
-        if self.evaluate():
+        if decision.conclusion == TraceT2App.models.Vote.PASS:
             for telescope in self.trigger.get_telescopes():
-                observation = (
-                    Observation.objects.filter(
-                        success=True,
-                        istest=False,
-                        observatory=telescope.OBSERVATORY,
-                        finish__gte=timezone.now(),
-                    )
-                    .order_by("-finish")
-                    .first()
-                )
+                telescope.schedulenow(self)
 
-                if observation is None or observation.priority < self.trigger.priority:
-                    if observation := telescope.schedulenow(self):
-                        return observation
+    # def runtrigger(self):
+    #     if self.evaluate():
+    #         for telescope in self.trigger.get_telescopes():
+    #             observation = (
+    #                 Observation.objects.filter(
+    #                     success=True,
+    #                     istest=False,
+    #                     observatory=telescope.OBSERVATORY,
+    #                     finish__gte=timezone.now(),
+    #                 )
+    #                 .order_by("-finish")
+    #                 .first()
+    #             )
 
-                # TODO
-                # Schedulenow only if:
-                # 1. Existing observation is owned by us
-                # 2. Pointing direction is substantially updated.
+    #             if observation is None or observation.priority < self.trigger.priority:
+    #                 if observation := telescope.schedulenow(self):
+    #                     return observation
 
-        return False
+    #             # TODO
+    #             # Schedulenow only if:
+    #             # 1. Existing observation is owned by us
+    #             # 2. Pointing direction is substantially updated.
 
-class Observation(models.Model):
-    trigger = models.ForeignKey(Trigger, null=True, on_delete=models.SET_NULL)
-    event = models.ForeignKey(Event, null=True, on_delete=models.SET_NULL)
-    start = models.DateTimeField(default=timezone.now)
-    finish = models.DateTimeField()
-    observatory = models.CharField(max_length=500)
-    priority = models.IntegerField()
-    success = models.BooleanField()
-    istest = models.BooleanField()
-    log = models.TextField()
-
-    def __bool__(self):
-        return self.success and not self.istest
+    #     return False
