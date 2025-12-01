@@ -22,6 +22,17 @@ class Vote(models.IntegerChoices):
 
 
 class Decision(models.Model):
+    class Manager(models.Manager):
+        def get_queryset(self):
+            return (
+                super()
+                .get_queryset()
+                .prefetch_related("factors")
+                .select_related("event")
+            )
+
+    objects = Manager()
+
     event = models.ForeignKey(Event, related_name="decisions", on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
     simulated = models.BooleanField()

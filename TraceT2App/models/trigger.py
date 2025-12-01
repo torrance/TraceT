@@ -89,6 +89,8 @@ class Event(models.Model):
                 .select_related("trigger")
             )
 
+    objects = Manager()
+
     trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)
     notices = models.ManyToManyField(Notice)
     groupid = models.CharField(max_length=500)
