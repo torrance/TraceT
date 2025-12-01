@@ -4,7 +4,9 @@
 
 {% block content %}
 
-<h1>Trigger: {{ trigger.name }}</h1>
+<div class="heading-label">Trigger</div>
+{% if trigger.active %}<div class"trigger-active">Active</div>{% else %}<div class="trigger-inactive">Inactive</div>{% endif %}
+<h1>{{ trigger.name }}</h1>
 
 <p></p><a href="{% url 'triggeredit' id=trigger.id %}">Edit trigger</a><p></p>
 
@@ -16,16 +18,14 @@
     {% endfor %}
 </ul>
 
-<p><strong>Group by:</strong> <code>{{ trigger.groupby }}</code></p>
-
 <h2>Metadata</h2>
 
-<ul>
-    <li><strong>RA Path:</strong> <code>{{ trigger.ra_path }}</code></li>
-    <li><strong>Dec Path:</strong> <code>{{ trigger.dec_path }}</code></li>
-    <li><strong>Time Path:</strong> <code>{{ trigger.time_path }}</code></li>
+<ul display: table;>
+    <li><strong style="display: inline-block; min-width: 8rem">Group ID path:</strong> <code>{{ trigger.groupby }}</code></li>
+    <li><strong style="display: inline-block; min-width: 8rem">RA path:</strong> <code>{{ trigger.ra_path }}</code></li>
+    <li><strong style="display: inline-block; min-width: 8rem">Dec path:</strong> <code>{{ trigger.dec_path }}</code></li>
+    <li><strong style="display: inline-block; min-width: 8rem">Time path:</strong> <code>{{ trigger.time_path }}</code></li>
 </ul>
-
 
 <h2>Conditions</h2>
 
@@ -35,11 +35,13 @@
     {% endfor %}
 </ul>
 
-<h2>Archival replay</h2>
+<hr>
+
+<h2>Events</h2>
 
 {% for event in events %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-    <h3 style="display: inline-block;">Event ID: {{ event.groupid }}</h3>
+    <h3 style="display: inline-block;">ID: {{ event.groupid }}</h3>
 
     <p style="display: inline-block; width: unset;">{{ event.time | date:"Y-M-d G:i:s e" }}</p>
 
@@ -52,7 +54,8 @@
 
 <table>
     <thead>
-        <tr><th>Received</th><th style="text-align: left;">Stream</th><th></th><th colspan="{{ event.noticess.0.decision.factors.all | length }}">Conditions</th></tr>
+        <tr><th colspan=4>Notices</th></tr>
+        <tr><th>Received</th><th style="text-align: left;">Stream</th><th style="width: 100%"></th><th colspan="{{ event.noticess.0.decision.factors.all | length }}">Current conditions</th></tr>
     </thead>
     <tbody>
         {% for notice in event.noticess %}
@@ -60,12 +63,32 @@
             <td>{{ notice.created | date:"Y-M-d G:i e" }}</td>
             <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
             <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
-            {% for factor in notice.decision.factors.all %}
-            <td>{{ factor.html }}</td>
-            {% endfor %}
+            <td>{% for factor in notice.decision.factors.all %}
+                {{ factor.html }}
+            {% endfor %}</td>
         </tr>
         {% endfor %}
     </tbody>
+    </tbody>
+</table>
+
+<p></p>
+
+<table>
+    <thead>
+        <tr><th colspan=3>Decisions</th></tr>
+        <tr><th style="width: 15%;">Date</th><th style="width: 60%;">Historic conditions</th><th style="width: 25%;">Observation</th></tr>
+    </thead>
+    <tbody>
+        {% if event.realdecisions %}
+            {% for decision in event.realdecisions %}
+            <tr>
+                <td>{{ decision.created }}</td><td>{% for factor in decision.factors.all %}{{ factor.html }} {% endfor %}</td><td></td>
+            </tr>
+            {% endfor %}
+        {% else %}
+        <tr><td colspan="3" style="text-align: center;">No recorded decisions</td></tr>
+        {% endif %}
     </tbody>
 </table>
 {% endfor %}

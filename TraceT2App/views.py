@@ -180,6 +180,8 @@ class Trigger(View):
 
             event.form = forms.EventTrigger(initial={"eventid": event.id})
 
+            event.realdecisions = event.decisions.filter(simulated=False).order_by("created")
+
         return render(
             request,
             "TraceT2App/trigger/get.html",

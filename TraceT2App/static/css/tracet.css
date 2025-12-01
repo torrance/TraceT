@@ -1,5 +1,10 @@
 :root {
   --width-content: 1200px;
+  --color-ok: #69b764;
+  --color-maybe: #ffc156;
+  --color-fail: #d82526;
+  --color-disabled: grey;
+
 }
 
 nav {
@@ -11,13 +16,52 @@ main {
     padding-top: 0;
 }
 
-table, thead, tbody {
-    width: 100%;
+.heading-label, .trigger-active, .trigger-inactive {
+    border-radius: 4px 4px 4px 4px;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    color: var(--color-bg);
+    font-weight: bold;
+    display: inline-block;
+    font-size: 0.7rem;
+
+    + h1 {
+        margin-top: 0
+    }
 }
 
-td:last-child {
-    width:100%;
-    text-align: right;
+.heading-label {
+    background-color: var(--color-table);
+}
+
+.trigger-active {
+    background-color: var(--color-ok)
+}
+
+.trigger-inactive {
+    background-color: var(--color-disabled)
+}
+
+table {
+    display: table;
+}
+
+table, thead, tbody {
+    width: 100%;
+    overflow: hidden;
+}
+
+table thead {
+    background: none;
+
+    tr {
+        color: var(--color-text);
+        background: var(--color-accent);
+    }
+    tr:first-child {
+        color: var(--color-bg);
+        background: var(--color-table);
+    }
 }
 
 form, textarea {
@@ -45,22 +89,19 @@ span.vote {
 }
 
 span.vote.pass {
-    background-color: #309303;
-    background-color: #69b764;
+    background-color: var(--color-ok);
 }
 
 span.vote.maybe {
-    background-color: #dba13a;
-    background-color: #ffc156;
+    background-color: var(--color-maybe);
 }
 
 span.vote.fail {
-    background-color: #b10318;
-    background-color: #d82526;
+    background-color: var(--color-fail);
 }
 
 span.vote.error {
-    background-color: grey;
+    background-color: var(--color-disabled)
 }
 
 span.vote.inherited {
@@ -85,13 +126,13 @@ span.gcn-status {
 }
 
 span.gcn-status.ok {
-    background-color: #69b764;
-    color: #69b764;  /* fallback */
+    background-color: var(--color-ok);
+    color: var(--color-ok);  /* fallback */
     color: rgba(0, 0, 0, 0);
 }
 
 span.gcn-status.fail {
-    background-color: #d82526;
-    color: #d82526;  /* fallback */
+    background-color: var(--color-fail);
+    color: var(--color-fail);  /* fallback */
     color: rgba(0, 0, 0, 0);
 }
