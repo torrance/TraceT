@@ -47,4 +47,4 @@ class Command(BaseCommand):
                             notice.full_clean()
                             notice.save()
                         except Exception as e:
-                            logging.error("An error saving a new notice:", exc_info=e)
+                            logging.error("An error occurred saving a new notice:", exc_info=e)
