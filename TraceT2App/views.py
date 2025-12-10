@@ -1,6 +1,7 @@
 import logging
 
 from django.core.paginator import EmptyPage, Paginator
+from django.contrib import messages
 from django.forms import formset_factory, modelformset_factory, inlineformset_factory
 from django.shortcuts import (
     get_object_or_404,
@@ -109,15 +110,36 @@ class TriggerEdit(View):
     RangeFormSet = inlineformset_factory(
         models.Trigger,
         models.NumericRangeCondition,
-        fields=["val1", "selector", "val2", "if_true", "if_false"],
-        extra=1,
+        form=forms.NumericRangeCondition,
+        extra=0,
     )
 
     BooleanFormSet = inlineformset_factory(
         models.Trigger,
         models.BooleanCondition,
-        fields=["selector", "if_true", "if_false"],
-        extra=1,
+        form=forms.BooleanCondition,
+        extra=0,
+    )
+
+    MWAFormSet = inlineformset_factory(
+        models.Trigger,
+        models.MWA,
+        form=forms.MWA,
+        extra=0,
+    )
+
+    ATCAFormSet = inlineformset_factory(
+        models.Trigger,
+        models.ATCA,
+        form=forms.ATCA,
+        extra=0,
+    )
+
+    ATCABandFormSet = inlineformset_factory(
+        models.ATCA,
+        models.ATCABand,
+        form=forms.ATCABand,
+        extra=0,
     )
 
     def get(self, request, id):
@@ -125,6 +147,8 @@ class TriggerEdit(View):
         triggerform = forms.Trigger(instance=trigger)
         rangeformset = self.RangeFormSet(instance=trigger)
         booleanformset = self.BooleanFormSet(instance=trigger)
+        mwaformset = self.MWAFormSet(instance=trigger)
+        atcaformset = self.ATCAFormSet(instance=trigger)
 
         return render(
             request,
@@ -133,6 +157,8 @@ class TriggerEdit(View):
                 "form": triggerform,
                 "rangeformset": rangeformset,
                 "booleanformset": booleanformset,
+                "mwaformset": mwaformset,
+                "atcaformset": atcaformset,
                 "trigger": trigger,
             },
         )
@@ -142,17 +168,25 @@ class TriggerEdit(View):
         triggerform = forms.Trigger(request.POST, instance=trigger)
         rangeformset = self.RangeFormSet(request.POST, instance=trigger)
         booleanformset = self.BooleanFormSet(request.POST, instance=trigger)
+        mwaformset = self.MWAFormSet(request.POST, instance=trigger)
+        atcaformset = self.ATCAFormSet(request.POST, instance=trigger)
 
         if (
             triggerform.is_valid()
             and rangeformset.is_valid()
             and booleanformset.is_valid()
+            and mwaformset.is_valid()
+            and atcaformset.is_valid()
         ):
-            trigger = triggerform.save()
-            rangeformset.save()
-            booleanformset.save()
+            # trigger = triggerform.save()
+            # rangeformset.save()
+            # booleanformset.save()
+            messages.success(request, "Trigger was successfully updated.")
             return HttpResponseRedirect(trigger.get_absolute_url())
         else:
+            messages.error(
+                request, "The trigger could not be updated due to errors in the form."
+            )
             return render(
                 request,
                 "TraceT2App/trigger/edit.html",
@@ -160,6 +194,8 @@ class TriggerEdit(View):
                     "form": triggerform,
                     "rangeformset": rangeformset,
                     "booleanformset": booleanformset,
+                    "mwaformset": mwaformset,
+                    "atcaformset": atcaformset,
                     "trigger": trigger,
                 },
             )
@@ -180,7 +216,9 @@ class Trigger(View):
 
             event.form = forms.EventTrigger(initial={"eventid": event.id})
 
-            event.realdecisions = event.decisions.filter(simulated=False).order_by("created")
+            event.realdecisions = event.decisions.filter(simulated=False).order_by(
+                "created"
+            )
 
         return render(
             request,

@@ -6,31 +6,114 @@
 
 <h1>Edit trigger {{trigger.id }}</h1>
 
-<form action="{% url 'triggeredit' id=trigger.id %}" method="post">
+<form id="trigger" action="{% url 'triggeredit' id=trigger.id %}" method="post">
     {% csrf_token %}
     {{ form }}
+
     <fieldset>
         <legend>Conditions</legend>
+
         {{ rangeformset.management_form }}
 
         {% for form in rangeformset %}
-            <fieldset>
+            <fieldset class="numericrangecondition deleteable transition-opacity">
                 <legend>Numeric range</legend>
                 {{ form }}
             </fieldset>
-
         {% endfor %}
+
+        <fieldset id="numericrangecondition-template" class="numericrangecondition hidden transition-opacity">
+            <legend>Numeric range</legend>
+            {{ rangeformset.empty_form }}
+        </fieldset>
 
         {{ booleanformset.management_form }}
 
         {% for form in booleanformset %}
-            <fieldset>
+            <fieldset class="booleancondition deleteable transition-opacity">
                 <legend>Boolean</legend>
                 {{ form }}
             </fieldset>
         {% endfor %}
-        <!-- {{ booleanformset.empty_form }} -->
+
+        <fieldset id="booleancondition-template" class="booleancondition hidden transition-opacity">
+            <legend>Numeric range</legend>
+            {{ booleanformset.empty_form }}
+        </fieldset>
+
+        <ul>
+            <li><a class="fieldset-add" template="numericrangecondition-template" counter="id_numericrangecondition_set-TOTAL_FORMS">Add numeric range condition</a></li>
+            <li><a class="fieldset-add" template="booleancondition-template" counter="id_booleancondition_set-TOTAL_FORMS">Add boolean condition</a></li>
+        </ul>
     </fieldset>
-    <input type="submit" value="Save">
+
+    <fieldset>
+        <legend>Telescopes</legend>
+
+        {{ mwaformset.management_form }}
+
+        {% for form in mwaformset %}
+            <fieldset class="mwa-telescope deleteable transition-opacity">
+                <legend>MWA</legend>
+                {{ form }}
+            </fieldset>
+        {% endfor %}
+
+        <fieldset id="mwa-telescope-template" class="mwa-telescope hidden transition-opacity">
+            <legend>MWA</legend>
+            {{ mwaformset.empty_form }}
+        </fieldset>
+
+        {{ atcaformset.management_form }}
+
+        {% for form in atcaformset %}
+            <fieldset class="atca-telescope deleteable transition-opacity">
+                <legend>ATCA</legend>
+                {{ form }}
+
+                {{ atcabandformset.management_form }}
+
+                {% for form in atcabandformset %}
+                <fieldset class="atcaband deleteable transition-opacity">
+                    <legend>Band</legend>
+                    {{ form }}
+                </fieldset>
+                {% endfor %}
+
+                <fieldset id="atcaband-template" class="atcaband hidden transition-opacity">
+                    <legend>Band</legend>
+                    {{ atcabandformset.empty_form }}
+                </fieldset>
+
+                <ul>
+                    <li><a class="fieldset-add" template="atcaband-template" counter="id_atca-TOTAL_FORMS">Add a band configuration</a></li>
+                </ul>
+            </fieldset>
+        {% endfor %}
+
+        <fieldset id="atca-telescope-template" class="atca-telescope hidden transition-opacity">
+            <legend>ATCA</legend>
+            {{ atcaformset.empty_form }}
+
+            <fieldset id="atcaband-template" class="atcaband hidden transition-opacity">
+                <legend>Band</legend>
+                {{ form }}
+            </fieldset>
+
+            <ul>
+                <li><a class="fieldset-add" template="atcaband-template" counter="id_atca-TOTAL_FORMS">Add a band configuration</a></li>
+            </ul>
+        </fieldset>
+
+        <ul>
+            <li><a class="fieldset-add" template="mwa-telescope-template" counter="id_mwa-TOTAL_FORMS">Add MWA telescope</a></li>
+            <li><a class="fieldset-add" template="atca-telescope-template" counter="id_atca-TOTAL_FORMS">Add ATCA telescope</a></li>
+        </ul>
+    </fieldset>
+    <div class="submits">
+        <input type="submit" value="Save">
+        <input type="submit" formaction="triggers/{{ trigger.id }}/delete" value="Delete" onclick="return confirm('Are you sure you want to delete this trigger?')">
+    </div>
+</div>
 </form>
 {% endblock %}

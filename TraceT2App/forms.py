@@ -14,27 +14,123 @@ class DateTimeInput(forms.DateTimeInput):
     input_type = "datetime-local"
 
 
-# class Trigger(forms.ModelForm):
-#     # active = forms.BooleanField(
-#     #     label="Is trigger active?"
-#     # )
+class Trigger(forms.ModelForm):
+    streams = forms.ModelMultipleChoiceField(models.GCNStream.objects, disabled=True)
+    groupby = forms.CharField(disabled=True)
 
-#     # streams = forms.MultipleChoiceField(
-#     #     label="GCN Streams"
-#     # )
-
-#     class Meta:
-#         model = models.Trigger
-#         fields = ["active", "streams", "groupby"]
-#         widgets = {
-#             # "streams": forms.CheckboxSelectMultiple
-#         }
+    class Meta:
+        model = models.Trigger
+        fields = ["active", "streams", "groupby", "ra_path", "dec_path", "time_path"]
 
 
 class NumericRangeCondition(forms.ModelForm):
+    template_name = "TraceT2App/forms/numericrangecondition.html"
+
     class Meta:
         model = models.NumericRangeCondition
-        fields = ["selector", "val1", "val2"]
+        fields = ["val1", "selector", "val2", "if_true", "if_false"]
+        widgets = {
+            "val1": forms.NumberInput(attrs={"placeholder": "Lower"}),
+            "val2": forms.NumberInput(attrs={"placeholder": "Upper"}),
+            "selector": forms.TextInput(attrs={"placeholder": "Selector"}),
+        }
+
+
+NumericRangeCondition.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.NumericRangeCondition, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in NumericRangeCondition.Meta.fields
+}
+
+
+class BooleanCondition(forms.ModelForm):
+    template_name = "TraceT2App/forms/base.html"
+
+    class Meta:
+        model = models.BooleanCondition
+        fields = ["selector", "if_true", "if_false"]
+        widgets = {"selector": forms.TextInput(attrs={"placeholder": "Selector"})}
+
+
+BooleanCondition.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.BooleanCondition, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in BooleanCondition.Meta.fields
+}
+
+
+class MWA(forms.ModelForm):
+    template_name = "TraceT2App/forms/base.html"
+
+    class Meta:
+        model = models.MWA
+        fields = [
+            "projectid",
+            "secure_key",
+            "tileset",
+            "frequency",
+            "frequency_resolution",
+            "time_resolution",
+            "exposure",
+            "nobs",
+            "maximum_window",
+        ]
+
+
+MWA.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.MWA, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in MWA.Meta.fields
+}
+
+
+class ATCA(forms.ModelForm):
+    template_name = "TraceT2App/forms/base.html"
+
+    class Meta:
+        model = models.ATCA
+        fields = [
+            "projectid",
+            "http_username",
+            "http_password",
+            "email",
+            "authentication_token",
+            "maximum_lag",
+            "minimum_exposure",
+            "maximum_exposure",
+        ]
+
+
+ATCA.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.ATCA, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in ATCA.Meta.fields
+}
+
+
+class ATCABand(forms.ModelForm):
+    template_name = "TraceT2App/forms/base.html"
+
+    class Meta:
+        model = models.ATCABand
+        fields = [
+            "band",
+            "freq1",
+            "freq2",
+            "exposure",
+        ]
+
+
+ATCABand.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.ATCABand, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in ATCABand.Meta.fields
+}
 
 
 class Notice(forms.Form):

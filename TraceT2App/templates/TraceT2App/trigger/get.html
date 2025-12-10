@@ -48,7 +48,7 @@
     <form method="post" style="display: inline-block; min-width: unset; padding: 0; border: none;">
         {% csrf_token %}
         {{ event.form }}
-        <input style="padding: 0; margin: 0;" type="submit" value="Retrigger" onclick="return confirm('Are you sure? Retriggering this event group may result in observation requests being sent.');">
+        <input style="padding: 0.2rem 0.4rem; margin: 0;" type="submit" value="Retrigger" onclick="return confirm('Are you sure? Retriggering this event group may result in observation requests being sent.');">
     </form>
 </div>
 

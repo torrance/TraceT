@@ -7,6 +7,18 @@
 
 }
 
+.invisible {
+    opacity: 0;
+}
+
+.hidden {
+    display: none;
+}
+
+.transition-opacity {
+    transition: opacity 400ms;
+}
+
 nav {
     margin-bottom: 0;
 }
@@ -17,7 +29,7 @@ main {
 }
 
 .heading-label, .trigger-active, .trigger-inactive {
-    border-radius: 4px 4px 4px 4px;
+    border-radius: var(--border-radius);
     text-transform: uppercase;
     padding: 0.2rem 0.5rem;
     color: var(--color-bg);
@@ -40,6 +52,25 @@ main {
 
 .trigger-inactive {
     background-color: var(--color-disabled)
+}
+
+ul.messages, form ul.errors {
+  background: var(--color-secondary-accent);
+  border-left: 4px solid var(--color-secondary);
+  padding: 0.5rem 2rem;
+}
+
+ul.messages:has(> li.success) {
+    border-color: var(--color-ok);
+}
+
+ul.messages:has(> li.error),
+form ul.errors {
+    border-color: var(--color-fail);
+}
+
+form fieldset ul.errors {
+    margin-top: 0;
 }
 
 table {
@@ -76,9 +107,67 @@ fieldset:has(input[type="date"][name="created_before"]) {
     }
 }
 
+label:has(~input[required])::after {
+    content: "*";
+    color: red;
+}
+
 input[type="date"][name="created_before"],
 input[type="date"][name="created_after"] {
     display: inline-block;
+}
+
+input[aria-invalid=true],
+select[aria-invalid=true],
+textarea[aria-invalid=true] {
+    border: 2px solid var(--color-fail);
+}
+
+input[value=Delete] {
+    background-color: var(--color-fail);
+    border-color: var(--color-fail);
+}
+
+fieldset {
+    border: 1px solid var(--color-bg-secondary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow) var(--color-shadow);
+    min-width: var(--width-card);
+    padding: 0 1.5rem;
+    margin: 1.5rem 0;
+    position: relative;
+
+    legend {
+        border-radius: var(--border-radius);
+        text-transform: uppercase;
+        padding: 0.2rem 0.5rem;
+        color: var(--color-bg);
+        font-weight: bold;
+        display: inline-block;
+        font-size: 0.85rem;
+        background-color: var(--color-table);
+    }
+
+    fieldset legend {
+        background-color: var(--color-text-secondary);
+    }
+
+    ~ fieldset {
+        margin-top: 1.5rem;
+    }
+}
+
+form div.field:not(.hidden) {
+    margin: 1rem 0;
+
+    input, select {
+        margin-bottom: 0;
+    }
+
+    p.help-text {
+        font-size: 80%;
+        margin: 0.4rem 0 0 0;
+    }
 }
 
 span.vote {
@@ -135,4 +224,152 @@ span.gcn-status.fail {
     background-color: var(--color-fail);
     color: var(--color-fail);  /* fallback */
     color: rgba(0, 0, 0, 0);
+}
+
+form#trigger {
+    input[type=text] {
+        font-family: monospace;
+    }
+
+    > div {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin: 1.5rem 0;
+        align-items: center;
+
+        label {
+            order: 0;
+            width: 15%;
+            min-width: 8rem;
+        }
+
+        input {
+            order: 2;
+            margin-bottom: 0;
+            max-width: calc(85% - 2rem)
+        }
+
+        input#id_active {
+            margin-right: 1rem;
+        }
+
+        /* input[type=text] { max-width: inherit; } */
+
+        div.helptext {
+            order: 3;
+            font-size: 80%;
+            margin: 0.4rem 0;
+        }
+    }
+
+    div.submits {
+        display: flex;
+        column-gap: 1.5rem;
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+
+    fieldset.numericrangecondition {
+        div.equation {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem 1rem;
+
+            label {
+                display: none;
+            }
+
+            input {
+                margin: 0;
+                width: calc(100% - 2rem);
+            }
+
+            .val1, .val2 {
+                display: inline-block;
+                overflow: hidden;
+                width: 15%;
+            }
+
+            .selector {
+                display: inline-block;
+                overflow: hidden;
+                width: calc(60% - 2rem);
+            }
+
+            .operator {
+                font-weight: bold;
+                font-size: 140%;
+                width: calc(5% - 2rem);
+                text-align: center;
+            }
+        }
+
+        div.then {
+            display: flex;
+            flex-direction: row;
+            gap: 0rem 2rem;
+            align-items: center;
+
+            > div {
+                display: inline-block;
+
+                label { display: inline; }
+                select { display: inline; margin: 0;}
+                input { display: inline; margin: 0;}
+            }
+        }
+    }
+
+    fieldset div.delete-button {
+        background: var(--color-fail);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        position: absolute;
+        top: -1.5rem;
+        right: 1.5rem;
+
+        &::after {
+            content: "\d7";
+            color: var(--color-bg);
+            font-size: 1rem;
+            display: block;
+        }
+    }
+}
+
+
+    #id_active {
+position: relative;
+appearance: none; outline: none;
+width: 50px; height: 30px;
+background-color: #ffffff; border: 1px solid #D9DADC;
+border-radius: 50px; box-shadow: inset -20px 0 0 0 #ffffff;
+transition-duration: 200ms;
+}
+
+#id_active:after {
+content: "";
+position: absolute;
+top: 1px; left: 1px;
+width: 26px; height: 26px;
+background-color: transparent;
+border-radius: 50%; box-shadow: 2px 4px 6px rgba(0,0,0,0.2);
+}
+
+#id_active:checked {
+border-color: #4ED164;
+box-shadow: inset 20px 0 0 0 #4ED164;
+}
+
+#id_active:checked:after {
+left: 20px;
+box-shadow: -2px 4px 3px rgba(0,0,0,0.05);
 }

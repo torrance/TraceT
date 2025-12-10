@@ -1,0 +1,34 @@
+{% include "TraceT2App/forms/errors.html" with form=form %}
+
+<div class="equation">
+    <div class="field val1">
+        {{ form.val1.label_tag }} {{ form.val1 }}
+    </div>
+
+    <div class="operator">&le;</div>
+
+    <div class="field selector">
+        {{ form.selector.label_tag }} {{ form.selector }}
+    </div>
+
+    <div class="operator">&lt;</div>
+
+    <div class="field val2">
+        {{ form.val2.label_tag }} {{ form.val2 }}
+    </div>
+</div>
+
+<div class="then">
+    <div class="field if_true">
+        {{ form.if_true.label_tag }} {{ form.if_true }}
+    </div>
+    <div class="field if_false">
+        {{ form.if_false.label_tag }} {{ form.if_false }}
+    </div>
+    <div class="field DELETE">
+        {{ form.DELETE.label_tag }} {{ form.DELETE }}
+    </div>
+</div>
+
+{{ form.id }}
+{{ form.trigger }}

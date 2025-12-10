@@ -107,8 +107,8 @@ class Factor(models.Model):
 
 class NumericRangeCondition(models.Model):
     selector = models.CharField(max_length=250)
-    val1 = models.FloatField(verbose_name="≥")
-    val2 = models.FloatField(verbose_name="＜")
+    val1 = models.FloatField(verbose_name="Lower bound")
+    val2 = models.FloatField(verbose_name="Upper bound")
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
     trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)

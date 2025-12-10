@@ -1,0 +1,21 @@
+{% if form.errors %}
+<ul class="errors">
+{% for field in form %}
+    {% for error in field.errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+{% endfor %}
+</ul>
+{% endif %}
+
+<div class="fields">
+    {% for field in form %}
+
+    <div class="field {{ field.name }} {% if field.is_hidden %}hidden{% endif %}">
+        {% if not field.is_hidden %}{{ field.label_tag }}{% endif %}
+        {{ field }}
+        {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+    </div>
+
+    {% endfor %}
+</div>

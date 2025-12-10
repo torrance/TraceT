@@ -46,11 +46,11 @@ class MWA(models.Model):
     )
 
     projectid = models.CharField(max_length=500)
-    password = models.CharField(max_length=500)
+    secure_key = models.CharField(max_length=500)
     repointing_threshold = models.FloatField()
     tileset = models.CharField(
         choices=TileSet,
-        help_text="Select the set of tiles to use for this observation. More tiles gives better sensitivity but at the expense larger data requirements.",
+        help_text="Select the set of tiles to use for this observation. More tiles gives better sensitivity but at the expense of larger data requirements.",
     )
     frequency = models.CharField(
         max_length=500,
