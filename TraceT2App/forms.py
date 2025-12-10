@@ -15,9 +15,6 @@ class DateTimeInput(forms.DateTimeInput):
 
 
 class Trigger(forms.ModelForm):
-    streams = forms.ModelMultipleChoiceField(models.GCNStream.objects, disabled=True)
-    groupby = forms.CharField(disabled=True)
-
     class Meta:
         model = models.Trigger
         fields = ["active", "streams", "groupby", "ra_path", "dec_path", "time_path"]

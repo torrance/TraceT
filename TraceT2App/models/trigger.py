@@ -48,7 +48,7 @@ class Trigger(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("trigger", args=[self.id])
+        return reverse("triggerview", args=[self.id])
 
     def get_or_create_event(self, notice: Notice) -> Optional["Event"]:
         # Check if we are listening to this particular stream

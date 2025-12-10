@@ -1,14 +1,14 @@
 {% extends "TraceT2App/base.html" %}
 
-{% block title %}Edit trigger {{ trigger.id }}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
 
-<h1>Edit trigger {{trigger.id }}</h1>
+<h1>{{ title }}</h1>
 
-<form id="trigger" action="{% url 'triggeredit' id=trigger.id %}" method="post">
+<form id="trigger" action="{{ actionurl }}" method="post">
     {% csrf_token %}
-    {{ form }}
+    {{ triggerform }}
 
     <fieldset>
         <legend>Conditions</legend>
@@ -112,7 +112,9 @@
     </fieldset>
     <div class="submits">
         <input type="submit" value="Save">
-        <input type="submit" formaction="triggers/{{ trigger.id }}/delete" value="Delete" onclick="return confirm('Are you sure you want to delete this trigger?')">
+        {% if trigger.id %}
+            <input type="submit" formaction="{% url 'triggerdelete' id=trigger.id %}" value="Delete" onclick="return confirm('Are you sure you want to delete this trigger?')">
+        {% endif %}
     </div>
 </div>
 </form>

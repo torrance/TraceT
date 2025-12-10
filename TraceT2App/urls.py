@@ -6,6 +6,7 @@ urlpatterns = [
     path("notices/create", views.NoticeCreate.as_view(), name="noticecreate"),
     path("notices/<int:id>", views.Notice.as_view(), name="notice"),
     path("triggers/create", views.TriggerCreate.as_view(), name="triggercreate"),
-    path("triggers/<int:id>", views.Trigger.as_view(), name="trigger"),
-    path("triggers/<int:id>/edit", views.TriggerEdit.as_view(), name="triggeredit")
+    path("triggers/<int:id>", views.TriggerView.as_view(), name="triggerview"),
+    path("triggers/<int:id>/update", views.TriggerUpdate.as_view(), name="triggeredit"),
+    path("triggers/<int:id>/delete", views.TriggerDelete.as_view(), name="triggerdelete"),
 ]

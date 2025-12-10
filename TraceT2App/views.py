@@ -11,6 +11,7 @@ from django.shortcuts import (
     HttpResponseRedirect,
     HttpResponse,
 )
+from django.urls import reverse
 from django.views import View
 
 from . import models, forms, filters
@@ -75,114 +76,99 @@ class NoticeCreate(View):
             return render(request, "TraceT2App/notice/create.html", {"form": form})
 
 
-class TriggerCreate(View):
-    RangeFormSet = inlineformset_factory(
-        models.Trigger,
-        models.NumericRangeCondition,
-        fields=["val1", "selector", "val2"],
-        extra=1,
-    )
+# class TriggerCreate(View):
+#     RangeFormSet = inlineformset_factory(
+#         models.Trigger,
+#         models.NumericRangeCondition,
+#         fields=["val1", "selector", "val2"],
+#         extra=1,
+#     )
 
-    def get(self, request):
-        triggerform = forms.Trigger()
-        rangeformset = self.RangeFormSet()
-        return render(
-            request,
-            "TraceT2App/trigger/create.html",
-            {"form": triggerform, "rangeformset": rangeformset},
+#     def get(self, request):
+#         triggerform = forms.Trigger()
+#         rangeformset = self.RangeFormSet()
+#         return render(
+#             request,
+#             "TraceT2App/trigger/create.html",
+#             {"form": triggerform, "rangeformset": rangeformset},
+#         )
+
+#     def post(self, request):
+#         triggerform = forms.Trigger(request.POST)
+#         rangeformset = self.RangeFormSet(request.POST)
+#         if triggerform.is_valid():
+#             trigger = triggerform.save()
+#             return HttpResponseRedirect(trigger.get_absolute_url())
+#         else:
+#             return render(
+#                 request,
+#                 "TraceT2App/trigger/create.html",
+#                 {"form": triggerform, rangeformset: "rangeformset"},
+#             )
+
+
+class TriggerBase(View):
+    def setup(self, request, id=None):
+        super().setup(request, id)
+
+        try:
+            self.trigger = models.Trigger.objects.get(id=id)
+        except models.Trigger.DoesNotExist:
+            self.trigger = None
+
+        post = request.POST if request.POST else None
+
+        self.forms = dict(
+            triggerform=forms.Trigger(post, instance=self.trigger),
+            rangeformset=inlineformset_factory(
+                models.Trigger,
+                models.NumericRangeCondition,
+                form=forms.NumericRangeCondition,
+                extra=0,
+            )(post, instance=self.trigger),
+            booleanformset=inlineformset_factory(
+                models.Trigger,
+                models.BooleanCondition,
+                form=forms.BooleanCondition,
+                extra=0,
+            )(post, instance=self.trigger),
+            mwaformset=inlineformset_factory(
+                models.Trigger,
+                models.MWA,
+                form=forms.MWA,
+                extra=0,
+            )(post, instance=self.trigger),
+            atcaformset=inlineformset_factory(
+                models.Trigger,
+                models.ATCA,
+                form=forms.ATCA,
+                extra=0,
+            )(post, instance=self.trigger),
         )
 
-    def post(self, request):
-        triggerform = forms.Trigger(request.POST)
-        rangeformset = self.RangeFormSet(request.POST)
-        if triggerform.is_valid():
-            trigger = triggerform.save()
-            return HttpResponseRedirect(trigger.get_absolute_url())
-        else:
-            return render(
-                request,
-                "TraceT2App/trigger/create.html",
-                {"form": triggerform, rangeformset: "rangeformset"},
-            )
+        # ATCABandFormSet = inlineformset_factory(
+        #     models.ATCA,
+        #     models.ATCABand,
+        #     form=forms.ATCABand,
+        #     extra=0,
+        # )
 
-
-class TriggerEdit(View):
-    RangeFormSet = inlineformset_factory(
-        models.Trigger,
-        models.NumericRangeCondition,
-        form=forms.NumericRangeCondition,
-        extra=0,
-    )
-
-    BooleanFormSet = inlineformset_factory(
-        models.Trigger,
-        models.BooleanCondition,
-        form=forms.BooleanCondition,
-        extra=0,
-    )
-
-    MWAFormSet = inlineformset_factory(
-        models.Trigger,
-        models.MWA,
-        form=forms.MWA,
-        extra=0,
-    )
-
-    ATCAFormSet = inlineformset_factory(
-        models.Trigger,
-        models.ATCA,
-        form=forms.ATCA,
-        extra=0,
-    )
-
-    ATCABandFormSet = inlineformset_factory(
-        models.ATCA,
-        models.ATCABand,
-        form=forms.ATCABand,
-        extra=0,
-    )
-
-    def get(self, request, id):
-        trigger = get_object_or_404(models.Trigger, id=id)
-        triggerform = forms.Trigger(instance=trigger)
-        rangeformset = self.RangeFormSet(instance=trigger)
-        booleanformset = self.BooleanFormSet(instance=trigger)
-        mwaformset = self.MWAFormSet(instance=trigger)
-        atcaformset = self.ATCAFormSet(instance=trigger)
-
+    def get(self, request, id=None):
         return render(
             request,
             "TraceT2App/trigger/edit.html",
-            {
-                "form": triggerform,
-                "rangeformset": rangeformset,
-                "booleanformset": booleanformset,
-                "mwaformset": mwaformset,
-                "atcaformset": atcaformset,
-                "trigger": trigger,
-            },
+            {"trigger": self.trigger, "title": self.title, "actionurl": self.actionurl}
+            | self.forms,
         )
 
-    def post(self, request, id):
-        trigger = get_object_or_404(models.Trigger, id=id)
-        triggerform = forms.Trigger(request.POST, instance=trigger)
-        rangeformset = self.RangeFormSet(request.POST, instance=trigger)
-        booleanformset = self.BooleanFormSet(request.POST, instance=trigger)
-        mwaformset = self.MWAFormSet(request.POST, instance=trigger)
-        atcaformset = self.ATCAFormSet(request.POST, instance=trigger)
+    def post(self, request, id=None):
+        if all(map(lambda f: f.is_valid(), self.forms.values())):
+            self.trigger = self.forms["triggerform"].save()
+            for f in self.forms.values():
+                f.save()
 
-        if (
-            triggerform.is_valid()
-            and rangeformset.is_valid()
-            and booleanformset.is_valid()
-            and mwaformset.is_valid()
-            and atcaformset.is_valid()
-        ):
-            # trigger = triggerform.save()
-            # rangeformset.save()
-            # booleanformset.save()
             messages.success(request, "Trigger was successfully updated.")
-            return HttpResponseRedirect(trigger.get_absolute_url())
+            return HttpResponseRedirect(self.trigger.get_absolute_url())
         else:
             messages.error(
                 request, "The trigger could not be updated due to errors in the form."
@@ -191,17 +177,43 @@ class TriggerEdit(View):
                 request,
                 "TraceT2App/trigger/edit.html",
                 {
-                    "form": triggerform,
-                    "rangeformset": rangeformset,
-                    "booleanformset": booleanformset,
-                    "mwaformset": mwaformset,
-                    "atcaformset": atcaformset,
-                    "trigger": trigger,
-                },
+                    "trigger": self.trigger,
+                    "title": self.title,
+                    "actionurl": self.actionurl,
+                }
+                | self.forms,
             )
 
 
-class Trigger(View):
+class TriggerCreate(TriggerBase):
+    def setup(self, request):
+        super().setup(request)
+        self.title = "Create a new trigger"
+        self.actionurl = reverse("triggercreate")
+
+        del self.forms["triggerform"].fields["active"]
+
+
+class TriggerUpdate(TriggerBase):
+    def setup(self, request, id):
+        super().setup(request, id)
+        self.title = f"Update {self.trigger.name}"
+        self.actionurl = reverse("triggeredit", args=[id])
+
+        self.forms["triggerform"].fields["streams"].disabled = True
+        self.forms["triggerform"].fields["groupby"].disabled = True
+
+
+class TriggerDelete(View):
+    def post(self, request, id):
+        trigger = get_object_or_404(models.Trigger, id=id)
+        trigger.delete()
+
+        messages.success(request, "Trigger was deleted")
+        return HttpResponseRedirect(reverse("home"))
+
+
+class TriggerView(View):
     def get(self, request, id):
         trigger = get_object_or_404(models.Trigger, id=id)
 
