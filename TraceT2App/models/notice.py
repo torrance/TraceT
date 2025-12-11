@@ -51,11 +51,15 @@ class Notice(models.Model):
 
         try:
             if self.stream.type == "xml":
-                return etree.parse(io.BytesIO(self.payload)).xpath(path)[0]
+                rootnode = etree.parse(io.BytesIO(self.payload)).getroot()
+                return rootnode.xpath(path, namespaces=rootnode.nsmap)[0]
             elif self.stream.type == "json":
                 return jsonpath.find(path, json.loads(self.payload))[0].value
         except IndexError:
             # In the case that no value is found at the path, we return None
+            return None
+        except etree.XPathEvalError as e:
+            logger.error(f"Malformed XML query: {path} ({str(e)})")
             return None
 
     def pretty_payload(self):
