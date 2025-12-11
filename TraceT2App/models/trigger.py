@@ -1,10 +1,10 @@
-import contextvars
 import datetime
 import logging
 from typing import Optional
 from warnings import deprecated
 
 from astropy.coordinates import SkyCoord
+import dateutil
 
 from django.db import models
 from django.core import mail
@@ -63,9 +63,10 @@ class Trigger(models.Model):
             )
             return None
 
-        # Return the event
+        # Get or create event and ensure notice is addded
         event, _ = self.event_set.get_or_create(groupid=groupid)
         event.notices.add(notice)
+
         return event
 
     def get_conditions(self):
@@ -89,6 +90,10 @@ class Event(models.Model):
                 .select_related("trigger")
             )
 
+    class Meta:
+        ordering = ["-time"]
+        indexes = [models.Index(fields=["-time"]), models.Index(fields=["groupid"])]
+
     objects = Manager()
 
     trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)
@@ -106,6 +111,28 @@ class Event(models.Model):
                 return result
 
         return None
+
+    def updatetime(self):
+        self.time = None
+        time_path = self.trigger.time_path
+
+        for notice in self.notices.all():
+            # Update event time to match the youngest time present in notices
+            try:
+                t = dateutil.parser.parse(
+                    notice.query(time_path),
+                    default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC),
+                )
+
+                if self.time is None or (t and t < self.time):
+                    self.time = t
+                    self.save()
+            except dateutil.parser.ParserError as e:
+                logger.warning(
+                    f"Failed to parse time (Trigger id={self.trigger.id}, Notice id={notice.id}) with path {self.trigger.time_path}. Error: {str(e)}"
+                )
+
+        self.save()
 
     def runtrigger(self):
         decision = TraceT2App.models.Decision.objects.create(

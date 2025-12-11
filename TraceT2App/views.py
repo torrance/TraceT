@@ -222,9 +222,10 @@ class TriggerView(View):
         for event in events:
             event.noticess = list(event.notices.order_by("created"))
             for notice in event.noticess:
-                notice.decision = event.decisions.filter(
-                    created__lte=notice.created, simulated=True
-                ).first()
+                decision, _ = models.Decision.objects.get_or_create(
+                    event=event, created=notice.created, simulated=True
+                )
+                notice.decision = decision
 
             event.form = forms.EventTrigger(initial={"eventid": event.id})
 
