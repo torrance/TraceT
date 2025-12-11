@@ -102,7 +102,7 @@ class MWA(models.Model):
 
         params = dict(
             project_id=self.projectid,
-            secure_key=self.password,
+            secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
             ra=ra,
             dec=dec,
