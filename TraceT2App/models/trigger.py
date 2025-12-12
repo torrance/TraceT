@@ -77,7 +77,7 @@ class Trigger(models.Model):
         ]
 
     def get_telescopes(self):
-        return [self.mwa, self.atca]
+        return [getattr(self, t) for t in ("mwa", "atca") if hasattr(self, t)]
 
 
 class Event(models.Model):
