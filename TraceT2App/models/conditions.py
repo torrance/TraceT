@@ -72,8 +72,13 @@ class Decision(models.Model):
 
     @property
     def conclusion(self) -> int:
-        return max(
-            *[factor.vote for factor in self.factors.all()], Vote.PASS, Vote.PASS
+        return min(
+            *[
+                (Vote.FAIL if factor.vote is None else factor.vote)
+                for factor in self.factors.all()
+            ],
+            Vote.PASS,  # default policy: pass
+            Vote.PASS,  # repeat twice, in case conditions is empty
         )
 
 
@@ -150,7 +155,7 @@ class BooleanCondition(models.Model):
                 return Factor(condition=str(self), vote=self.if_true)
         except ValueError as e:
             # Unable to convert to boolean
-            return Factor(condition=str)
+            return Factor(condition=str(self))
 
         return Factor(condition=str(self), vote=self.if_false)
 
