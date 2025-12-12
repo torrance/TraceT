@@ -1,18 +1,12 @@
 "use strict";
 
 window.addEventListener("load", function() {
-    const formsets = this.document.querySelectorAll(".deleteable");
-
-    for (let i = 0; i < formsets.length; i += 1) {
-        attachDeleteHandler(formsets[i]);
-    }
+    const formsets = this.document.querySelectorAll(".deleteable")
+        .forEach(attachDeleteHandler);
 });
 
 window.addEventListener("load", function() {
-    const links = this.document.querySelectorAll("a.fieldset-add");
-    for (let i = 0; i < links.length; i += 1) {
-        attachFieldsetHandler(links[i]);
-    }
+    this.document.querySelectorAll("a.fieldset-add").forEach(attachFieldsetHandler);
 });
 
 function attachFieldsetHandler(link) {
@@ -28,28 +22,22 @@ function attachFieldsetHandler(link) {
 
     link.addEventListener("click", function() {
         const newempty = document.importNode(templatenode, true);
-        console.log(newempty);
         newempty.classList.add("invisible")
 
         // Increment the form counter that Django uses internally
         const prefix = parseInt(total.value)
         total.value = prefix + 1;
 
-        const nodes = newempty.querySelectorAll("label, input, select, textarea");
-        for (let i = 0; i < nodes.length; i +=1) {
-            const node = nodes[i];
-            if (node.getAttribute("id")) {
-                node.setAttribute("id", node.getAttribute("id").replace("__prefix__", prefix));
-            };
-            if (node.getAttribute("name")) {
-                node.setAttribute("name", node.getAttribute("name").replace("__prefix__", prefix));
-            };
-            if (node.getAttribute("for")) {
-                node.setAttribute("for", node.getAttribute("for").replace("__prefix__", prefix));
-            };
-        };
+        newempty.querySelectorAll("a, label, input, select, textarea, template")
+            .forEach(node => {
+                Array.from(node.attributes)
+                    .filter(a => a.specified)
+                    .forEach(a => a.value = a.value.replace("__prefix__", prefix));
+            });
 
+        // Attach handlers
         attachDeleteHandler(newempty);
+        newempty.querySelectorAll("a.fieldset-add").forEach(attachFieldsetHandler);
 
         parentnode.appendChild(newempty);
         newempty.classList.remove("hidden");

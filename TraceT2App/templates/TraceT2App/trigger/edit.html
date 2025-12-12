@@ -18,30 +18,32 @@
             {{ rangeformset.management_form }}
 
             {% for form in rangeformset %}
-                <fieldset class="numericrangecondition deleteable transition-opacity">
-                    <legend>Numeric range</legend>
-                    {{ form }}
-                </fieldset>
+                {% partialdef rangeformset inline %}
+                    <fieldset class="numericrangecondition deleteable transition-opacity">
+                        <legend>Numeric range</legend>
+                        {{ form }}
+                    </fieldset>
+                {% endpartialdef %}
             {% endfor %}
 
-            <template id="numericrangecondition-template"><fieldset class="numericrangecondition hidden transition-opacity">
-                <legend>Numeric range</legend>
-                {{ rangeformset.empty_form }}
-            </fieldset></template>
+            {% with form=rangeformset.empty_form %}
+                <template id="numericrangecondition-template">{% partial rangeformset %}</template>
+            {% endwith %}
 
             {{ booleanformset.management_form }}
 
             {% for form in booleanformset %}
-                <fieldset class="booleancondition deleteable transition-opacity">
-                    <legend>Boolean</legend>
-                    {{ form }}
-                </fieldset>
+                {% partialdef booleanformset inline %}
+                    <fieldset class="booleancondition deleteable transition-opacity">
+                        <legend>Boolean</legend>
+                        {{ form }}
+                    </fieldset>
+                {% endpartialdef %}
             {% endfor %}
 
-            <template id="booleancondition-template"><fieldset class="booleancondition hidden transition-opacity">
-                <legend>Numeric range</legend>
-                {{ booleanformset.empty_form }}
-            </fieldset></template>
+            {% with form=booleanformset.empty_form %}
+                <template id="booleancondition-template">{% partial booleanformset %}</template>
+            {% endwith %}
         </div>
 
         <ul>
@@ -58,77 +60,75 @@
             {{ mwaformset.management_form }}
 
             {% for form in mwaformset %}
-                <fieldset class="mwa-telescope deleteable transition-opacity">
-                    <legend>MWA</legend>
-                    {{ form }}
-                </fieldset>
+                {% partialdef mwa inline %}
+                    <fieldset class="mwa-telescope deleteable transition-opacity">
+                        <legend>MWA</legend>
+                        {{ form }}
+                    </fieldset>
+                {% endpartialdef %}
             {% endfor %}
 
-            <template id="mwa-telescope-template">
-                <fieldset class="mwa-telescope hidden transition-opacity">
-                    <legend>MWA</legend>
-                    {{ mwaformset.empty_form }}
-                </fieldset>
-            </template>
+            {% with form=mwaformset.empty_form %}
+                <template id="mwa-telescope-template">{% partial mwa %}</template>
+            {% endwith %}
 
             {{ atcaformset.management_form }}
 
             {% for form in atcaformset %}
-                <fieldset class="atca-telescope deleteable transition-opacity">
-                    <legend>ATCA</legend>
-                    {{ form }}
+                {% partialdef atca inline %}
+                    <fieldset class="atca-telescope deleteable transition-opacity">
+                        <legend>ATCA</legend>
+                        {{ form }}
 
-                    {{ form.nested.management_form }}
+                        {{ form.nested.management_form }}
 
-                    {% for form in form.nested %}
-                        {% include "TraceT2App/forms/errors.html" with form=form %}
-                    {% endfor %}
+                        {% for form in form.nested %}
+                            {% include "TraceT2App/forms/errors.html" with form=form %}
+                        {% endfor %}
 
-                    <table>
-                        <thead>
-                            <tr>
-                            {% for field in form.nested.empty_form %}
-                                {% if not field.is_hidden %}
-                                <th>{{ field.label }}</th>
-                                {% endif %}
-                            {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody id="{{ form.nested.prefix }}-PARENT">
-                            {% for form in form.nested %}
-                            <tr class="atcaband deleteable transition-opacity">
-                                {% for field in form %}
-                                    {% if field.is_hidden %}
-                                        {{ field }}
-                                    {% else %}
-                                        <td class="field-{{ field.name }}">{{ field }}</td>
+                        <table>
+                            <thead>
+                                <tr>
+                                {% for field in form.nested.empty_form %}
+                                    {% if not field.is_hidden %}
+                                    <th>{{ field.label }}</th>
                                     {% endif %}
                                 {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                </tr>
+                            </thead>
+                            <tbody id="{{ form.nested.prefix }}-PARENT">
+                                {% for form in form.nested %}
+                                    {% partialdef atcaband inline %}
+                                        <tr class="atcaband deleteable transition-opacity">
+                                            {% for field in form %}
+                                                {% if field.is_hidden %}
+                                                    {{ field }}
+                                                {% else %}
+                                                    <td class="field-{{ field.name }}">{{ field }}</td>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tr>
+                                    {% endpartialdef %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
 
-                    <template id="{{ form.nested.prefix }}-template"><tr class="atcaband deleteable transition-opacity">
-                    {% for field in form.nested.empty_form %}
-                        {% if field.is_hidden %}
-                            {{ field }}
-                        {% else %}
-                            <td class="field-{{ field.name }}">{{ field }}</td>
-                        {% endif %}
-                    {% endfor %}
-                    </tr></template>
+                        <template id="{{ form.nested.prefix }}-template">
+                            {% with form=form.nested.empty_form %}
+                                {% partial atcaband %}
+                            {% endwith %}
+                        </template>
 
-                    <ul>
-                        <li><a class="fieldset-add" template="{{ form.nested.prefix }}-template" parentnode="{{form.nested.prefix}}-PARENT" counter="id_{{ form.nested.prefix }}-TOTAL_FORMS">Add a band configuration</a></li>
-                    </ul>
-                </fieldset>
+                        <ul>
+                            <li><a class="fieldset-add" template="{{ form.nested.prefix }}-template" parentnode="{{form.nested.prefix}}-PARENT" counter="id_{{ form.nested.prefix }}-TOTAL_FORMS">Add a band configuration</a></li>
+                        </ul>
+                    </fieldset>
+                {% endpartialdef atca %}
             {% endfor %}
 
-            <template id="atca-telescope-template"><fieldset class="atca-telescope hidden transition-opacity">
-                <legend>ATCA</legend>
-                {{ atcaformset.empty_form }}
-            </fieldset></template>
+            {% with form=atcaformset.empty_form %}
+                <template id="atca-telescope-template">{% partial atca %}</template>
+            {% endwith %}
         </div>
 
         <ul>
