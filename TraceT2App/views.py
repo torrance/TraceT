@@ -142,16 +142,10 @@ class TriggerBase(View):
                 models.Trigger,
                 models.ATCA,
                 form=forms.ATCA,
+                formset=forms.BaseATCAWithBandsFormset,
                 extra=0,
             )(post, instance=self.trigger),
         )
-
-        # ATCABandFormSet = inlineformset_factory(
-        #     models.ATCA,
-        #     models.ATCABand,
-        #     form=forms.ATCABand,
-        #     extra=0,
-        # )
 
     def get(self, request, id=None):
         return render(

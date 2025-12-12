@@ -8,11 +8,11 @@
 }
 
 .invisible {
-    opacity: 0;
+    opacity: 0 !important;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .transition-opacity {
@@ -92,6 +92,12 @@ table thead {
     tr:first-child {
         color: var(--color-bg);
         background: var(--color-table);
+    }
+}
+
+form {
+    a.delete-formset {
+        color: var(--color-fail);
     }
 }
 
@@ -324,7 +330,27 @@ form#trigger {
         }
     }
 
-    fieldset div.delete-button {
+    fieldset.booleancondition {
+        div.fields {
+            display: flex;
+            gap: 1rem 1rem;
+            align-items: true;
+
+            .field-selector {
+                width: calc(70% - 2rem);
+            }
+
+            .field-if_true, .field-if_false {
+                width: 15%;
+
+                select {
+                    width: 100%;
+                }
+            }
+        }
+    }
+
+    fieldset a.delete-formset {
         background: var(--color-fail);
         border-radius: 50%;
         display: flex;
@@ -335,6 +361,11 @@ form#trigger {
         position: absolute;
         top: -1.5rem;
         right: 1.5rem;
+        overflow: hidden;
+
+        span {
+            display: none;
+        }
 
         &::after {
             content: "\d7";
@@ -342,6 +373,23 @@ form#trigger {
             font-size: 1rem;
             display: block;
         }
+    }
+
+    tr.atcaband {
+        input, select {
+            margin-bottom: 0;
+        }
+
+        a.delete-formset {
+            position: relative;
+            display: inline-block;
+            top: unset;
+            right: unset;
+        }
+
+            &::after {
+                display: inline-block;
+            }
     }
 }
 

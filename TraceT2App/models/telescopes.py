@@ -260,8 +260,10 @@ class ATCABand(models.Model):
         help_text="The exposure time of this reciever. Receivers will be continuously cycled up until the full scheduled slot is exhausted. [minute]"
     )
     freq1 = models.IntegerField(
+        verbose_name="Frequency 1",
         help_text="Specify the central frequency for the first of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]"
     )
     freq2 = models.IntegerField(
+        verbose_name="Frequency 2",
         help_text="Specify the central frequency for the second of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]"
     )

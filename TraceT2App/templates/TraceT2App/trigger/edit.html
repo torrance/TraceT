@@ -13,103 +13,130 @@
     <fieldset>
         <legend>Conditions</legend>
 
-        {{ rangeformset.management_form }}
+        <div id="conditions">
 
-        {% for form in rangeformset %}
-            <fieldset class="numericrangecondition deleteable transition-opacity">
+            {{ rangeformset.management_form }}
+
+            {% for form in rangeformset %}
+                <fieldset class="numericrangecondition deleteable transition-opacity">
+                    <legend>Numeric range</legend>
+                    {{ form }}
+                </fieldset>
+            {% endfor %}
+
+            <template id="numericrangecondition-template"><fieldset class="numericrangecondition hidden transition-opacity">
                 <legend>Numeric range</legend>
-                {{ form }}
-            </fieldset>
-        {% endfor %}
+                {{ rangeformset.empty_form }}
+            </fieldset></template>
 
-        <fieldset id="numericrangecondition-template" class="numericrangecondition hidden transition-opacity">
-            <legend>Numeric range</legend>
-            {{ rangeformset.empty_form }}
-        </fieldset>
+            {{ booleanformset.management_form }}
 
-        {{ booleanformset.management_form }}
+            {% for form in booleanformset %}
+                <fieldset class="booleancondition deleteable transition-opacity">
+                    <legend>Boolean</legend>
+                    {{ form }}
+                </fieldset>
+            {% endfor %}
 
-        {% for form in booleanformset %}
-            <fieldset class="booleancondition deleteable transition-opacity">
-                <legend>Boolean</legend>
-                {{ form }}
-            </fieldset>
-        {% endfor %}
-
-        <fieldset id="booleancondition-template" class="booleancondition hidden transition-opacity">
-            <legend>Numeric range</legend>
-            {{ booleanformset.empty_form }}
-        </fieldset>
+            <template id="booleancondition-template"><fieldset class="booleancondition hidden transition-opacity">
+                <legend>Numeric range</legend>
+                {{ booleanformset.empty_form }}
+            </fieldset></template>
+        </div>
 
         <ul>
-            <li><a class="fieldset-add" template="numericrangecondition-template" counter="id_numericrangecondition_set-TOTAL_FORMS">Add numeric range condition</a></li>
-            <li><a class="fieldset-add" template="booleancondition-template" counter="id_booleancondition_set-TOTAL_FORMS">Add boolean condition</a></li>
+            <li><a class="fieldset-add" template="numericrangecondition-template" parentnode="conditions" counter="id_{{ rangeformset.prefix }}-TOTAL_FORMS">Add numeric range condition</a></li>
+            <li><a class="fieldset-add" template="booleancondition-template" parentnode="conditions" counter="id_{{ booleanformset.prefix }}-TOTAL_FORMS">Add boolean condition</a></li>
         </ul>
     </fieldset>
 
     <fieldset>
         <legend>Telescopes</legend>
 
-        {{ mwaformset.management_form }}
+        <div id="telescopes">
 
-        {% for form in mwaformset %}
-            <fieldset class="mwa-telescope deleteable transition-opacity">
-                <legend>MWA</legend>
-                {{ form }}
-            </fieldset>
-        {% endfor %}
+            {{ mwaformset.management_form }}
 
-        <fieldset id="mwa-telescope-template" class="mwa-telescope hidden transition-opacity">
-            <legend>MWA</legend>
-            {{ mwaformset.empty_form }}
-        </fieldset>
-
-        {{ atcaformset.management_form }}
-
-        {% for form in atcaformset %}
-            <fieldset class="atca-telescope deleteable transition-opacity">
-                <legend>ATCA</legend>
-                {{ form }}
-
-                {{ atcabandformset.management_form }}
-
-                {% for form in atcabandformset %}
-                <fieldset class="atcaband deleteable transition-opacity">
-                    <legend>Band</legend>
+            {% for form in mwaformset %}
+                <fieldset class="mwa-telescope deleteable transition-opacity">
+                    <legend>MWA</legend>
                     {{ form }}
                 </fieldset>
-                {% endfor %}
+            {% endfor %}
 
-                <fieldset id="atcaband-template" class="atcaband hidden transition-opacity">
-                    <legend>Band</legend>
-                    {{ atcabandformset.empty_form }}
+            <template id="mwa-telescope-template">
+                <fieldset class="mwa-telescope hidden transition-opacity">
+                    <legend>MWA</legend>
+                    {{ mwaformset.empty_form }}
                 </fieldset>
+            </template>
 
-                <ul>
-                    <li><a class="fieldset-add" template="atcaband-template" counter="id_atca-TOTAL_FORMS">Add a band configuration</a></li>
-                </ul>
-            </fieldset>
-        {% endfor %}
+            {{ atcaformset.management_form }}
 
-        <fieldset id="atca-telescope-template" class="atca-telescope hidden transition-opacity">
-            <legend>ATCA</legend>
-            {{ atcaformset.empty_form }}
+            {% for form in atcaformset %}
+                <fieldset class="atca-telescope deleteable transition-opacity">
+                    <legend>ATCA</legend>
+                    {{ form }}
 
-            <fieldset id="atcaband-template" class="atcaband hidden transition-opacity">
-                <legend>Band</legend>
-                {{ form }}
-            </fieldset>
+                    {{ form.nested.management_form }}
 
-            <ul>
-                <li><a class="fieldset-add" template="atcaband-template" counter="id_atca-TOTAL_FORMS">Add a band configuration</a></li>
-            </ul>
-        </fieldset>
+                    {% for form in form.nested %}
+                        {% include "TraceT2App/forms/errors.html" with form=form %}
+                    {% endfor %}
+
+                    <table>
+                        <thead>
+                            <tr>
+                            {% for field in form.nested.empty_form %}
+                                {% if not field.is_hidden %}
+                                <th>{{ field.label }}</th>
+                                {% endif %}
+                            {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody id="{{ form.nested.prefix }}-PARENT">
+                            {% for form in form.nested %}
+                            <tr class="atcaband deleteable transition-opacity">
+                                {% for field in form %}
+                                    {% if field.is_hidden %}
+                                        {{ field }}
+                                    {% else %}
+                                        <td class="field-{{ field.name }}">{{ field }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <template id="{{ form.nested.prefix }}-template"><tr class="atcaband deleteable transition-opacity">
+                    {% for field in form.nested.empty_form %}
+                        {% if field.is_hidden %}
+                            {{ field }}
+                        {% else %}
+                            <td class="field-{{ field.name }}">{{ field }}</td>
+                        {% endif %}
+                    {% endfor %}
+                    </tr></template>
+
+                    <ul>
+                        <li><a class="fieldset-add" template="{{ form.nested.prefix }}-template" parentnode="{{form.nested.prefix}}-PARENT" counter="id_{{ form.nested.prefix }}-TOTAL_FORMS">Add a band configuration</a></li>
+                    </ul>
+                </fieldset>
+            {% endfor %}
+
+            <template id="atca-telescope-template"><fieldset class="atca-telescope hidden transition-opacity">
+                <legend>ATCA</legend>
+                {{ atcaformset.empty_form }}
+            </fieldset></template>
+        </div>
 
         <ul>
-            <li><a class="fieldset-add" template="mwa-telescope-template" counter="id_mwa-TOTAL_FORMS">Add MWA telescope</a></li>
-            <li><a class="fieldset-add" template="atca-telescope-template" counter="id_atca-TOTAL_FORMS">Add ATCA telescope</a></li>
+            <li><a class="fieldset-add" template="mwa-telescope-template" parentnode="telescopes" counter="id_{{ mwaformset.prefix }}-TOTAL_FORMS">Add MWA telescope</a></li>
+            <li><a class="fieldset-add" template="atca-telescope-template" parentnode="telescopes" counter="id_{{ atcaformset.prefix }}-TOTAL_FORMS">Add ATCA telescope</a></li>
         </ul>
     </fieldset>
+
     <div class="submits">
         <input type="submit" value="Save">
         {% if trigger.id %}

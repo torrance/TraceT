@@ -1,43 +1,43 @@
 "use strict";
 
 window.addEventListener("load", function() {
-    var nodes = this.document.querySelectorAll("fieldset.deleteable");
+    const formsets = this.document.querySelectorAll(".deleteable");
 
-    for (var i = 0; i < nodes.length; i += 1) {
-        attachDeleteHandler(nodes[i]);
+    for (let i = 0; i < formsets.length; i += 1) {
+        attachDeleteHandler(formsets[i]);
     }
 });
 
 window.addEventListener("load", function() {
-    var links = this.document.querySelectorAll("a.fieldset-add");
-    for (var i = 0; i < links.length; i += 1) {
+    const links = this.document.querySelectorAll("a.fieldset-add");
+    for (let i = 0; i < links.length; i += 1) {
         attachFieldsetHandler(links[i]);
     }
 });
 
-window.addEventListener("load", function() {
-    var inputs = this.document.querySelectorAll(".overrideable-lock");
-    for (var i; i < inputs.length; i += 1) {
-        attachLockHandler(inputs[i]);
-    }
-});
-
 function attachFieldsetHandler(link) {
-    var emptytemplate = document.getElementById(link.getAttribute("template"));
-    var total = document.getElementById(link.getAttribute("counter"));
+    const template = document.getElementById(link.getAttribute("template"));
+    const total = document.getElementById(link.getAttribute("counter"));
+    const parentnode = document.getElementById(link.getAttribute("parentnode"));
+
+    if (!(template || total || parentnode)) { return; }
+
+    const templatenode = Array.from(template.content.childNodes).filter(
+        node => !((node.nodeType == Node.TEXT_NODE && !node.textContent.trim()))
+    )[0];
 
     link.addEventListener("click", function() {
-        var newempty = emptytemplate.cloneNode(true);
+        const newempty = document.importNode(templatenode, true);
+        console.log(newempty);
         newempty.classList.add("invisible")
-        newempty.id = ""
 
         // Increment the form counter that Django uses internally
-        var prefix = parseInt(total.value)
+        const prefix = parseInt(total.value)
         total.value = prefix + 1;
 
-        var nodes = newempty.querySelectorAll("label, input, select, textarea");
-        for (var i = 0; i < nodes.length; i +=1) {
-            var node = nodes[i];
+        const nodes = newempty.querySelectorAll("label, input, select, textarea");
+        for (let i = 0; i < nodes.length; i +=1) {
+            const node = nodes[i];
             if (node.getAttribute("id")) {
                 node.setAttribute("id", node.getAttribute("id").replace("__prefix__", prefix));
             };
@@ -50,38 +50,33 @@ function attachFieldsetHandler(link) {
         };
 
         attachDeleteHandler(newempty);
-        var links = newempty.querySelectorAll("a.fieldset-add");
-        for (var i = 0; i < links.length; i += 1) {
-            attachFieldsetHandler(links[i]);
-        }
 
-        var ul = link.closest("ul");
-        ul.parentNode.insertBefore(newempty, ul);
+        parentnode.appendChild(newempty);
         newempty.classList.remove("hidden");
         newempty.focus(); // A cludge to trigger a redraw and allow the opacity transition to show
         newempty.classList.remove("invisible");
     });
 }
 
-function attachDeleteHandler(fieldset) {
-    fieldset.querySelector("div.field.DELETE").style.display = "none";
+function attachDeleteHandler(formset) {
+    const checkbox = formset.querySelector(".field-DELETE input[type='checkbox']");
+    if (!checkbox) { return; }
 
-    var del = document.createElement("div");
-    del.classList.add("delete-button");
+    const label = formset.querySelector("label[for='" + checkbox.id + "']");
+    if (label) { label.classList.add("hidden"); }
 
-    fieldset.insertBefore(del, fieldset.childNodes[0]);
+    const link = document.createElement("a");
+    link.innerHTML = "<span>Delete</span>"
+    link.classList.add("delete-formset");
 
-    del.onclick = function() {
-        var fieldset = this.closest("fieldset");
-        var checkbox = fieldset.querySelector("div.field.DELETE input[type=checkbox]");
+    checkbox.parentNode.insertBefore(link, checkbox);
+    checkbox.classList.add("hidden");
+
+    link.addEventListener("click", function() {
         checkbox.checked = true;
-
-        fieldset.focus();
-        fieldset.addEventListener("transitionend", function() {
-            console.log("End of transition!");
+        formset.addEventListener("transitionend", function() {
             this.classList.add("hidden");
         });
-
-        fieldset.classList.add("invisible");
-    };
+        formset.classList.add("invisible");
+    });
 }
