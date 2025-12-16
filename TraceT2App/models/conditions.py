@@ -22,6 +22,11 @@ class Vote(models.IntegerChoices):
 
 
 class Decision(models.Model):
+    class Source(models.TextChoices):
+        NOTICE = ("notice", "Notice")
+        MANUAL = ("manual", "Manually triggered")
+        SIMULATED = ("simulated", "Simulated")
+
     class Manager(models.Manager):
         def get_queryset(self):
             return (
@@ -35,7 +40,7 @@ class Decision(models.Model):
 
     event = models.ForeignKey(Event, related_name="decisions", on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
-    simulated = models.BooleanField()
+    source = models.CharField(choices=Source)
 
     def save(self, *args, **kwargs):
         res = super().save(*args, **kwargs)
@@ -46,7 +51,7 @@ class Decision(models.Model):
         notices = self.event.notices.filter(created__lte=self.created).order_by(
             "created"
         )
-        if not self.simulated:
+        if self.isreal():
             notices.filter(istest=False)
 
         notices = list(notices)
@@ -69,11 +74,18 @@ class Decision(models.Model):
         self.factors.add(*factors, bulk=False)
 
         # If this is a real decision and it's a PASS, trigger observations
-        if not self.simulated and self.conclusion == Vote.PASS:
+        # Manually triggered observations will run if only a MAYBE
+        if self.isreal() and (
+            self.conclusion == Vote.PASS
+            or (self.source == Decision.Source.MANUAL and self.conclusion == Vote.MAYBE)
+        ):
             for telescope in self.event.trigger.get_telescopes():
                 telescope.create_observation(self)
 
         return res
+
+    def isreal(self):
+        return self.source != Decision.Source.SIMULATED
 
     @property
     def conclusion(self) -> int:

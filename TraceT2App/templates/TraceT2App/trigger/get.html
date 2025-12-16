@@ -76,14 +76,15 @@
 
 <table>
     <thead>
-        <tr><th colspan=3>Decisions</th></tr>
-        <tr><th style="width: 15%;">Date</th><th style="width: 60%;">Historic conditions</th><th style="width: 25%;">Observation</th></tr>
+        <tr><th colspan=4>Decisions</th></tr>
+        <tr><th style="width: 15%;">Date</th><th>Source</th><th style="width: 60%;">Historic conditions</th><th style="width: 25%;">Observation</th></tr>
     </thead>
     <tbody>
         {% if event.realdecisions %}
             {% for decision in event.realdecisions %}
             <tr>
-                <td>{{ decision.id }} {{ decision.created }}</td>
+                <td>{{ decision.created }}</td>
+                <td>{{ decision.get_source_display }}</td>
                 <td>{% for factor in decision.factors.all %}{{ factor.html }} {% endfor %}</td>
                 <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">{% for obs in decision.observations.all %}
                     <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">{{ obs.observatory }}</span>
@@ -91,7 +92,7 @@
             </tr>
             {% endfor %}
         {% else %}
-        <tr><td colspan="3" style="text-align: center;">No recorded decisions</td></tr>
+        <tr><td colspan="4" style="text-align: center;">No recorded decisions</td></tr>
         {% endif %}
     </tbody>
 </table>

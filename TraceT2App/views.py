@@ -219,15 +219,17 @@ class TriggerView(View):
             event.noticess = list(event.notices.order_by("created"))
             for notice in event.noticess:
                 decision, _ = models.Decision.objects.get_or_create(
-                    event=event, created=notice.created, simulated=True
+                    event=event,
+                    created=notice.created,
+                    source=models.Decision.Source.SIMULATED,
                 )
                 notice.decision = decision
 
             event.form = forms.EventTrigger(initial={"eventid": event.id})
 
-            event.realdecisions = event.decisions.filter(simulated=False).order_by(
-                "created"
-            )
+            event.realdecisions = event.decisions.exclude(
+                source=models.Decision.Source.SIMULATED
+            ).order_by("created")
 
         return render(
             request,
@@ -245,7 +247,10 @@ class TriggerView(View):
         form = forms.EventTrigger(request.POST)
 
         if form.is_valid():
-            trigger.event_set.get(id=form.cleaned_data["eventid"]).runtrigger()
+            event = trigger.event_set.get(id=form.cleaned_data["eventid"])
+            models.Decision.objects.create(
+                event=event, source=models.Decision.Source.MANUAL
+            )
 
             return HttpResponseRedirect(trigger.get_absolute_url())
         else:

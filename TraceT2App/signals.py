@@ -47,7 +47,9 @@ def on_notice_save(sender, instance, created, **kwargs):
         if event := trigger.get_or_create_event(notice):
             # If this is a real notice, run the trigger for real
             if not notice.istest:
-                event.runtrigger()
+                models.Decision.objects.create(
+                    event=event, source=models.Decision.Source.NOTICE
+                )
 
 
 @receiver(post_save, sender=models.NumericRangeCondition)
@@ -58,7 +60,7 @@ def on_condition_save(sender, instance, created, **kwargs):
     """
     trigger = instance.trigger
     models.Decision.objects.filter(
-        event__trigger__id=trigger.id, simulated=True
+        event__trigger__id=trigger.id, source=models.Decision.Source.SIMULATED
     ).delete()
 
 

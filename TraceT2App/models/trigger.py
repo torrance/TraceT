@@ -133,8 +133,3 @@ class Event(models.Model):
                 )
 
         self.save()
-
-    def runtrigger(self):
-        TraceT2App.models.Decision.objects.create(
-            event=self, simulated=False
-        )
