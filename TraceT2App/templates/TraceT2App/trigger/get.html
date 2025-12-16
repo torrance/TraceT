@@ -83,7 +83,11 @@
         {% if event.realdecisions %}
             {% for decision in event.realdecisions %}
             <tr>
-                <td>{{ decision.created }}</td><td>{% for factor in decision.factors.all %}{{ factor.html }} {% endfor %}</td><td></td>
+                <td>{{ decision.id }} {{ decision.created }}</td>
+                <td>{% for factor in decision.factors.all %}{{ factor.html }} {% endfor %}</td>
+                <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">{% for obs in decision.observations.all %}
+                    <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">{{ obs.observatory }}</span>
+                {% endfor %}</td>
             </tr>
             {% endfor %}
         {% else %}

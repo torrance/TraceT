@@ -76,35 +76,37 @@ class NoticeCreate(View):
             return render(request, "TraceT2App/notice/create.html", {"form": form})
 
 
-# class TriggerCreate(View):
-#     RangeFormSet = inlineformset_factory(
-#         models.Trigger,
-#         models.NumericRangeCondition,
-#         fields=["val1", "selector", "val2"],
-#         extra=1,
-#     )
+class ObservationList(View):
+    def get(self, request):
+        filter = filters.Observation(
+            request.GET,
+            models.Observation.objects.order_by("-created"),
+        )
 
-#     def get(self, request):
-#         triggerform = forms.Trigger()
-#         rangeformset = self.RangeFormSet()
-#         return render(
-#             request,
-#             "TraceT2App/trigger/create.html",
-#             {"form": triggerform, "rangeformset": rangeformset},
-#         )
+        paginator = Paginator(filter.qs, 100)
+        pagenumber = request.GET.get("page", 1)
 
-#     def post(self, request):
-#         triggerform = forms.Trigger(request.POST)
-#         rangeformset = self.RangeFormSet(request.POST)
-#         if triggerform.is_valid():
-#             trigger = triggerform.save()
-#             return HttpResponseRedirect(trigger.get_absolute_url())
-#         else:
-#             return render(
-#                 request,
-#                 "TraceT2App/trigger/create.html",
-#                 {"form": triggerform, rangeformset: "rangeformset"},
-#             )
+        try:
+            observations = paginator.page(pagenumber)
+        except EmptyPage:
+            # If out of range, display last page
+            observations = paginator.page(paginator.num_pages)
+
+        return render(
+            request,
+            "TraceT2App/observation/list.html",
+            {"observations": observations, "filter": filter},
+        )
+
+
+class ObservationView(View):
+    def get(self, request, id):
+        observation = get_object_or_404(models.Observation, id=id)
+        return render(
+            request,
+            "TraceT2App/observation/get.html",
+            {"observation": observation},
+        )
 
 
 class TriggerBase(View):

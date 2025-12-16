@@ -75,6 +75,10 @@ form fieldset ul.errors {
 
 table {
     display: table;
+
+    &.left-align {
+        td, th { text-align: left; }
+    }
 }
 
 table, thead, tbody {
@@ -217,6 +221,23 @@ span.gcn-status {
 @keyframes blinker {
     50% {
         opacity: 0.5;
+    }
+}
+
+.observation-status {
+    display: inline-block;
+    padding: 0 0.3rem;
+    border-radius: var(--border-radius);
+    background-color :var(--color-fail);
+    color: white;
+    text-decoration: none;
+
+    &.api_ok {
+        background-color: var(--color-ok);
+    }
+
+    &.clash {
+        background-color: var(--color-maybe);
     }
 }
 

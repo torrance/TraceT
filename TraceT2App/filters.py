@@ -58,3 +58,11 @@ class Notice(django_filters.FilterSet):
     class Meta:
         model = models.Notice
         fields = ["stream", "stream__type", "created", "istest"]
+
+
+class Observation(django_filters.FilterSet):
+    istest = django_filters.BooleanFilter(label="Is Test", widget=BooleanWidget)
+
+    class Meta:
+        model = models.Observation
+        fields = ["observatory", "status", "istest"]
