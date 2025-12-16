@@ -7,30 +7,146 @@ from astropy.units import hourangle
 import requests
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
-from TraceT2App.models import Event, Trigger
+from TraceT2App.models import Event, Trigger, Decision
 
 
 logger = logging.getLogger(__name__)
 
 
+class Observatory(models.TextChoices):
+    ATCA = "atca", "ATCA"
+    MWA = "mwa", "MWA"
+
+
 class Observation(models.Model):
-    trigger = models.ForeignKey(Trigger, null=True, on_delete=models.SET_NULL)
-    event = models.ForeignKey(Event, null=True, on_delete=models.SET_NULL)
-    start = models.DateTimeField(default=timezone.now)
-    finish = models.DateTimeField()
-    observatory = models.CharField(max_length=500)
+    class Status(models.TextChoices):
+        API_OK = "api_ok", "OK"
+        API_FAILURE = "api_failure", "Failure"
+        CLASH = "clash", "Clashing observation"
+        REQUEST_FAILURE = "request_failure", "Could not make API request"
+        DATA_FAILURE = "data_failure", "Unable to prepare request"
+        UNKNOWN_FAILURE = "unknown_failure", "An unexpected failure occurred"
+
+    decision = models.ForeignKey(
+        Decision, null=True, on_delete=models.SET_NULL, related_name="observations"
+    )
+    created = models.DateTimeField(default=timezone.now)
+    finish = models.DateTimeField(null=True)
+    observatory = models.CharField(choices=Observatory, max_length=500)
     priority = models.IntegerField()
-    success = models.BooleanField()
+    status = models.CharField(choices=Status)
     istest = models.BooleanField()
     log = models.TextField()
 
     def __bool__(self):
         return self.success and not self.istest
 
+    def get_absolute_url(self):
+        return reverse("observationview", args=[self.id])
 
-class MWA(models.Model):
+    def get_istest_display(self):
+        return "Test" if self.istest else "Active"
+
+    def in_progress(self):
+        if self.status == Observation.Status.API_OK and self.created and self.finish:
+            return self.created <= timezone.now() <= self.finish
+        else:
+            return False
+
+
+class Telescope(models.Model):
+    class Meta:
+        abstract = True
+
+    class PreparationException(BaseException):
+        pass
+
+    class OverrideException(BaseException):
+        pass
+
+    class RequestException(BaseException):
+        pass
+
+    class RejectionException(BaseException):
+        pass
+
+    def __init__(self, *args, **kwargs):
+        self._logs = []
+        return super().__init__(*args, **kwargs)
+
+    def log(self, title: str, message: str):
+        timestamp = datetime.datetime.now(datetime.UTC).isoformat()
+        self._logs.append("\n" + timestamp + ": " + title + "\n")
+        self._logs.extend(["> " + line for line in message.splitlines()])
+
+    def get_log(self) -> str:
+        return "\n".join(self._logs).strip()
+
+    def create_observation(self, decision):
+        observation = Observation(
+            decision=decision,
+            observatory=self.OBSERVATORY,
+            priority=decision.event.trigger.priority,
+            istest=(not self.trigger.active),
+            log="",
+        )
+
+        try:
+            self.prepare_request(observation)
+            self.check_override(observation)
+            self.make_request(observation)
+            observation.status = Observation.Status.API_OK
+        except Telescope.PreparationException:
+            observation.status = Observation.Status.DATA_FAILURE
+        except Telescope.OverrideException:
+            observation.status = Observation.Status.CLASH
+        except Telescope.RequestException:
+            observation.status = Observation.Status.REQUEST_FAILURE
+        except Telescope.RejectionException:
+            observation.status = Observation.Status.API_FAILURE
+        except Exception as e:
+            self.log(
+                "An unknown exception was thrown during Telescope.create_observation()",
+                str(e),
+            )
+
+            observation.status = Observation.Status.UNKNOWN_FAILURE
+
+        observation.log = self.get_log()
+        return observation.save()
+
+    def prepare_request(self, observation: Observation):
+        raise NotImplementedError()
+
+    def make_request(self, observation: Observation):
+        raise NotImplementedError()
+
+    def check_override(self, observation: Observation):
+        current_observation = (
+            Observation.objects.filter(
+                status=Observation.Status.API_OK,
+                observatory=self.OBSERVATORY,
+                finish__gte=timezone.now(),
+            )
+            .order_by("-finish")
+            .first()
+        )
+        if (
+            current_observation is not None
+            and observation.priority <= current_observation.priority
+        ):
+            self.log(
+                "Clashing observation",
+                f"Existing observation (id={current_observation.id} in effect with "
+                f"priority {current_observation.priority} (>= {observation.priority})",
+            )
+            raise Telescope.OverrideException()
+
+
+class MWA(Telescope):
     class TileSet(models.TextChoices):
         PHASE_ONE = "phase_one", "Phase 1"
         P1_HEXES = "p1+hexes", "Phase 1 + Hexes"
@@ -86,21 +202,17 @@ class MWA(models.Model):
     def __str__(self):
         return "MWA Configuration"
 
-    def schedulenow(self, event: Event):
+    def prepare_request(self, observation: Observation):
         try:
+            event = observation.decision.event
             ra = event.querylatest(self.trigger.ra_path)
             dec = event.querylatest(self.trigger.dec_path)
-
             ra, dec = float(ra), float(dec)
         except Exception as e:
-            logger.error(
-                "An error occurred attempting to parse RA,Dec values", exc_info=e
-            )
-            return False
+            self.log("An error occurred attempting to parse RA,Dec values:", str(e))
+            raise Telescope.PreparationException() from e
 
-        istest = not self.trigger.active
-
-        params = dict(
+        self.api_params = dict(
             project_id=self.projectid,
             secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
@@ -109,40 +221,38 @@ class MWA(models.Model):
             avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
             tileset=self.tileset,
-            pretend=istest,
+            pretend=(not self.trigger.active),
         )
+        self.log("API params", json.dumps(self.api_params, indent=4))
 
+    def make_request(self, observation: Observation):
         try:
             response = requests.get(
-                "http://mro.mwa128t.org/trigger/triggerobs", params=params
+                "http://mro.mwa128t.org/trigger/triggerobs", params=self.api_params
             )
             response.raise_for_status()
 
-            success = json.loads(response.text).get("success", False)
-            log = response.text
-        except Exception as e:
-            logger.error("An error occurred triggering an MWA observation", exc_info=e)
-            success = False
-            log = str(e)
+            response = json.loads(response.text)
+            self.log("Pretty API response", json.dumps(response, indent=4))
+        except requests.RequestException as e:
+            self.log("An error occurred making the HTTP request to the MWA API", str(e))
+            raise Telescope.RequestException() from e
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            self.log("Raw API response", response.text)
+            self.log("The MWA API returned invalid JSON", str(e))
 
-        finish = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
-            seconds=self.nobs * len(self.frequency.split()) * self.exposure
-            + 120  # 120 is the default calibration time
-        )
-
-        return Observation.objects.create(
-            trigger=self.trigger,
-            event=event,
-            observatory=self.OBSERVATORY,
-            priority=self.trigger.priority,
-            success=success,
-            istest=istest,
-            finish=finish,
-            log=log,
-        )
+        if response.get("success", False):
+            observation.finish = datetime.datetime.now(
+                datetime.UTC
+            ) + datetime.timedelta(
+                seconds=self.nobs * len(self.frequency.split()) * self.exposure
+                + 120  # 120 is the default calibration time
+            )
+        else:
+            raise Telescope.RejectionException()
 
 
-class ATCA(models.Model):
+class ATCA(Telescope):
     OBSERVATORY = "ATCA"
 
     trigger = models.OneToOneField(
@@ -168,7 +278,7 @@ class ATCA(models.Model):
     def __str__(self):
         return "ATCA Configuration"
 
-    def schedulenow(self, event: Event):
+    def prepare_request(self, observation: Observation):
         def minutes_to_hms(minutes: float) -> str:
             h = int(minutes // 60)
             minutes -= h * 60
@@ -181,14 +291,13 @@ class ATCA(models.Model):
             return f"{h:02d}:{m:02d}:{s:02d}"
 
         try:
+            event = observation.decision.event
             ra = event.querylatest(self.trigger.ra_path)
             dec = event.querylatest(self.trigger.dec_path)
             coord = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
         except Exception as e:
-            logger.error(
-                "An error occurred attempting to parse RA,Dec values", exc_info=e
-            )
-            return False
+            self.log("An error occurred attempting to parse RA,Dec values", str(e))
+            raise Telescope.PreparationException() from e
 
         istest = not self.trigger.active
 
@@ -227,16 +336,26 @@ class ATCA(models.Model):
         # Request is passed as a JSON string
         params["request"] = json.dumps(request)
 
-        print(params)
+        self.api_params = params
+        self.log("API params", json.dumps(self.api_params, indent=4))
 
-        response = requests.post(
-            "https://www.narrabri.atnf.csiro.au/cgi-bin/obstools/rapid_response/rapid_response_service.py",
-            params,
-        )
+    def make_request(self, observation: Observation):
+        try:
+            response = requests.post(
+                "https://www.narrabri.atnf.csiro.au/cgi-bin/obstools/rapid_response/rapid_response_service.py",
+                self.api_params,
+            )
+            response.raise_for_status()
+        except requests.RequestException as e:
+            self.log(
+                "An error occurred making the HTTP request to the ATCA API", str(e)
+            )
+            raise Telescope.RequestException() from e
 
-        print(response)
+        self.log("Raw API response", response.text)
 
-        return False
+        # TODO: parse the response and detect success or failure
+        raise Telescope.RejectionException()
 
 
 class ATCABand(models.Model):
@@ -261,9 +380,9 @@ class ATCABand(models.Model):
     )
     freq1 = models.IntegerField(
         verbose_name="Frequency 1",
-        help_text="Specify the central frequency for the first of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]"
+        help_text="Specify the central frequency for the first of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]",
     )
     freq2 = models.IntegerField(
         verbose_name="Frequency 2",
-        help_text="Specify the central frequency for the second of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]"
+        help_text="Specify the central frequency for the second of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]",
     )

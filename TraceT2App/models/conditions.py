@@ -68,6 +68,11 @@ class Decision(models.Model):
 
         self.factors.add(*factors, bulk=False)
 
+        # If this is a real decision and it's a PASS, trigger observations
+        if not self.simulated and self.conclusion == Vote.PASS:
+            for telescope in self.event.trigger.get_telescopes():
+                telescope.create_observation(self)
+
         return res
 
     @property

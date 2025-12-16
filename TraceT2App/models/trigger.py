@@ -135,35 +135,6 @@ class Event(models.Model):
         self.save()
 
     def runtrigger(self):
-        decision = TraceT2App.models.Decision.objects.create(
+        TraceT2App.models.Decision.objects.create(
             event=self, simulated=False
         )
-
-        if decision.conclusion == TraceT2App.models.Vote.PASS:
-            for telescope in self.trigger.get_telescopes():
-                telescope.schedulenow(self)
-
-    # def runtrigger(self):
-    #     if self.evaluate():
-    #         for telescope in self.trigger.get_telescopes():
-    #             observation = (
-    #                 Observation.objects.filter(
-    #                     success=True,
-    #                     istest=False,
-    #                     observatory=telescope.OBSERVATORY,
-    #                     finish__gte=timezone.now(),
-    #                 )
-    #                 .order_by("-finish")
-    #                 .first()
-    #             )
-
-    #             if observation is None or observation.priority < self.trigger.priority:
-    #                 if observation := telescope.schedulenow(self):
-    #                     return observation
-
-    #             # TODO
-    #             # Schedulenow only if:
-    #             # 1. Existing observation is owned by us
-    #             # 2. Pointing direction is substantially updated.
-
-    #     return False
