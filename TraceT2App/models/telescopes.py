@@ -163,6 +163,14 @@ class MWA(Telescope):
 
     projectid = models.CharField(max_length=500)
     secure_key = models.CharField(max_length=500)
+    ra_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
+    )
+    dec_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
+    )
     repointing_threshold = models.FloatField()
     tileset = models.CharField(
         choices=TileSet,
@@ -265,6 +273,14 @@ class ATCA(Telescope):
         help_text="The email address that was supplied in the NAPA proposal."
     )
     authentication_token = models.CharField(max_length=500)
+    ra_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
+    )
+    dec_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
+    )
     maximum_lag = models.FloatField(
         help_text="The maximum delay allowed for scheduling this observation. If the observation cannot be scheduled to start within this time, it will not be scheduled at all. [minute]"
     )

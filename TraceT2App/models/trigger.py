@@ -35,8 +35,6 @@ class Trigger(models.Model):
     )
     streams = models.ManyToManyField(GCNStream)
     groupby = models.CharField(max_length=500)
-    ra_path = models.CharField(max_length=500)
-    dec_path = models.CharField(max_length=500)
     time_path = models.CharField(
         max_length=250,
         help_text="The (x|j)json path to event time. This value is set by the first matching notice and is not overridden by subsequent notices.",

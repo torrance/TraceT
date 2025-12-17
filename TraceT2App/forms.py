@@ -17,7 +17,7 @@ class DateTimeInput(forms.DateTimeInput):
 class Trigger(forms.ModelForm):
     class Meta:
         model = models.Trigger
-        fields = ["active", "streams", "groupby", "ra_path", "dec_path", "time_path"]
+        fields = ["active", "streams", "groupby", "time_path"]
 
 
 class NumericRangeCondition(forms.ModelForm):
@@ -66,6 +66,8 @@ class MWA(forms.ModelForm):
         fields = [
             "projectid",
             "secure_key",
+            "ra_path",
+            "dec_path",
             "tileset",
             "frequency",
             "frequency_resolution",
@@ -95,6 +97,8 @@ class ATCA(forms.ModelForm):
             "http_password",
             "email",
             "authentication_token",
+            "ra_path",
+            "dec_path",
             "maximum_lag",
             "minimum_exposure",
             "maximum_exposure",
