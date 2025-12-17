@@ -17,7 +17,7 @@ class DateTimeInput(forms.DateTimeInput):
 class Trigger(forms.ModelForm):
     class Meta:
         model = models.Trigger
-        fields = ["active", "streams", "groupby", "time_path"]
+        fields = ["name", "active", "streams", "groupby", "time_path"]
 
 
 class NumericRangeCondition(forms.ModelForm):
@@ -58,11 +58,11 @@ BooleanCondition.Meta.error_messages = {
 }
 
 
-class MWA(forms.ModelForm):
+class MWACorrelator(forms.ModelForm):
     template_name = "TraceT2App/forms/base.html"
 
     class Meta:
-        model = models.MWA
+        model = models.MWACorrelator
         fields = [
             "projectid",
             "secure_key",
@@ -75,14 +75,44 @@ class MWA(forms.ModelForm):
             "exposure",
             "nobs",
             "maximum_window",
+            "repointing_threshold",
         ]
 
 
-MWA.Meta.error_messages = {
+MWACorrelator.Meta.error_messages = {
     field: {
-        "required": f"{getattr(models.MWA, field).field.verbose_name.capitalize()} is required"
+        "required": f"{getattr(models.MWACorrelator, field).field.verbose_name.capitalize()} is required"
     }
-    for field in MWA.Meta.fields
+    for field in MWACorrelator.Meta.fields
+}
+
+
+class MWAVCS(forms.ModelForm):
+    template_name = "TraceT2App/forms/base.html"
+
+    class Meta:
+        model = models.MWAVCS
+        fields = [
+            "projectid",
+            "secure_key",
+            "ra_path",
+            "dec_path",
+            "tileset",
+            "frequency",
+            "frequency_resolution",
+            "time_resolution",
+            "exposure",
+            "nobs",
+            "maximum_window",
+            "repointing_threshold",
+        ]
+
+
+MWAVCS.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.MWAVCS, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in MWAVCS.Meta.fields
 }
 
 

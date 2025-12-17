@@ -75,7 +75,14 @@ class Trigger(models.Model):
         ]
 
     def get_telescopes(self):
-        return [getattr(self, t) for t in ("mwa", "atca") if hasattr(self, t)]
+        return [
+            getattr(self, attr)
+            for attr in dir(self)
+            if hasattr(self, attr)
+            and issubclass(
+                type(getattr(self, attr)), TraceT2App.models.telescopes.Telescope
+            )
+        ]
 
 
 class Event(models.Model):

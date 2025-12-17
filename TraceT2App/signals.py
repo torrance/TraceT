@@ -9,6 +9,24 @@ from TraceT2App import models
 logger = logging.getLogger(__name__)
 
 
+def resync_events(trigger: models.Trigger):
+    # Keep a record of all matching events
+    events = dict()
+
+    # Create events that match the stream and groupby criteria
+    for notice in models.Notice.objects.filter(stream__in=trigger.streams.all()):
+        event = trigger.get_or_create_event(notice)
+        if event:
+            events[event.id] = event
+
+    # Delete any events that no longer match the stream/groupby criteria
+    trigger.event_set.exclude(id__in=events.keys()).delete()
+
+    # Set or update event time
+    for event in events.values():
+        event.updatetime()
+
+
 @receiver(post_save, sender=models.Trigger)
 def on_trigger_save(sender, instance, created, **kwargs):
     """
@@ -18,14 +36,25 @@ def on_trigger_save(sender, instance, created, **kwargs):
     """
     trigger = instance
 
-    # Create events that match the stream and groupby criteria
-    if created:
-        for notice in models.Notice.objects.filter(stream__in=trigger.streams.all()):
-            event = trigger.get_or_create_event(notice)
+    # Build the associated list of events, taking into account any changes stream/groupby
+    resync_events(trigger)
 
     # Set or update (where Trigger.time_path has changed) event time
     for event in trigger.event_set.all():
         event.updatetime()
+
+
+@receiver(m2m_changed, sender=models.Trigger.streams.through)
+def no_trigger_streams_changed(sender, instance, pk_set, action, reverse, **kwargs):
+    """
+    For each new notice added to an event, update the Event.time field to reflect
+    the _earliest_ `trigger.time_path` value.
+    """
+    trigger = instance
+
+    if not reverse and action.startswith("post"):
+        # Build the associated list of events, taking into account any changes stream/groupby
+        resync_events(trigger)
 
 
 @receiver(post_save, sender=models.Notice)
@@ -53,6 +82,7 @@ def on_notice_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=models.NumericRangeCondition)
+@receiver(post_save, sender=models.BooleanCondition)
 def on_condition_save(sender, instance, created, **kwargs):
     """
     When a Trigger's condition changes, we clear out prior simulated decisions
@@ -72,5 +102,5 @@ def no_event_notices_changed(sender, instance, pk_set, action, reverse, **kwargs
     """
     event = instance
 
-    if reverse is False and action == "post_add":
+    if not reverse and action.startswith("post"):
         event.updatetime()

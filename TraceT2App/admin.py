@@ -36,8 +36,8 @@ class ContainsCondition(NestedTabularInline):
     can_move = True
 
 
-class MWA(NestedStackedInline):
-    model = models.MWA
+class MWACorrelator(NestedStackedInline):
+    model = models.MWACorrelator
 
 
 class ATCABand(NestedTabularInline):
@@ -58,4 +58,4 @@ class Observation(admin.ModelAdmin):
 
 @admin.register(models.Trigger)
 class Trigger(NestedModelAdmin):
-    inlines = [NumericRangeCondition, BooleanCondition, ContainsCondition, MWA, ATCA]
+    inlines = [NumericRangeCondition, BooleanCondition, ContainsCondition, MWACorrelator, ATCA]

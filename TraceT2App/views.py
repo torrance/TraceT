@@ -136,8 +136,14 @@ class TriggerBase(View):
             )(post, instance=self.trigger),
             mwaformset=inlineformset_factory(
                 models.Trigger,
-                models.MWA,
-                form=forms.MWA,
+                models.MWACorrelator,
+                form=forms.MWACorrelator,
+                extra=0,
+            )(post, instance=self.trigger),
+            mwavcsformset=inlineformset_factory(
+                models.Trigger,
+                models.MWAVCS,
+                form=forms.MWAVCS,
                 extra=0,
             )(post, instance=self.trigger),
             atcaformset=inlineformset_factory(
@@ -159,9 +165,14 @@ class TriggerBase(View):
 
     def post(self, request, id=None):
         if all(map(lambda f: f.is_valid(), self.forms.values())):
+            # Save the parent trigger first
             self.trigger = self.forms["triggerform"].save()
-            for f in self.forms.values():
-                f.save()
+            for name, form in self.forms.items():
+                # Then for save each child element, careful to assign the instance in
+                # the case that trigger is new.
+                if name != "triggerform":
+                    form.instance = self.trigger
+                    form.save()
 
             messages.success(request, "Trigger was successfully updated.")
             return HttpResponseRedirect(self.trigger.get_absolute_url())

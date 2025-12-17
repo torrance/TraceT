@@ -146,7 +146,10 @@ class Telescope(models.Model):
             raise Telescope.OverrideException()
 
 
-class MWA(Telescope):
+class MWABase(Telescope):
+    class Meta:
+        abstract = True
+
     class TileSet(models.TextChoices):
         PHASE_ONE = "phase_one", "Phase 1"
         P1_HEXES = "p1+hexes", "Phase 1 + Hexes"
@@ -163,14 +166,6 @@ class MWA(Telescope):
 
     projectid = models.CharField(max_length=500)
     secure_key = models.CharField(max_length=500)
-    ra_path = models.CharField(
-        max_length=500,
-        help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
-    )
-    dec_path = models.CharField(
-        max_length=500,
-        help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
-    )
     repointing_threshold = models.FloatField()
     tileset = models.CharField(
         choices=TileSet,
@@ -207,14 +202,25 @@ class MWA(Telescope):
         )
     )
 
+
+class MWACorrelator(MWABase):
+    ra_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
+    )
+    dec_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
+    )
+
     def __str__(self):
-        return "MWA Configuration"
+        return "MWA Correlator Configuration"
 
     def prepare_request(self, observation: Observation):
         try:
             event = observation.decision.event
-            ra = event.querylatest(self.trigger.ra_path)
-            dec = event.querylatest(self.trigger.dec_path)
+            ra = event.querylatest(self.ra_path)
+            dec = event.querylatest(self.dec_path)
             ra, dec = float(ra), float(dec)
         except Exception as e:
             self.log("An error occurred attempting to parse RA,Dec values:", str(e))
@@ -237,6 +243,69 @@ class MWA(Telescope):
         try:
             response = requests.get(
                 "http://mro.mwa128t.org/trigger/triggerobs", params=self.api_params
+            )
+            response.raise_for_status()
+
+            response = json.loads(response.text)
+            self.log("Pretty API response", json.dumps(response, indent=4))
+        except requests.RequestException as e:
+            self.log("An error occurred making the HTTP request to the MWA API", str(e))
+            raise Telescope.RequestException() from e
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            self.log("Raw API response", response.text)
+            self.log("The MWA API returned invalid JSON", str(e))
+
+        if response.get("success", False):
+            observation.finish = datetime.datetime.now(
+                datetime.UTC
+            ) + datetime.timedelta(
+                seconds=self.nobs * len(self.frequency.split()) * self.exposure
+                + 120  # 120 is the default calibration time
+            )
+        else:
+            raise Telescope.RejectionException()
+
+
+class MWAVCS(MWABase):
+    ra_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
+    )
+    dec_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
+    )
+
+    def __str__(self):
+        return "MWA VCS Configuration"
+
+    def prepare_request(self, observation: Observation):
+        try:
+            event = observation.decision.event
+            ra = event.querylatest(self.ra_path)
+            dec = event.querylatest(self.dec_path)
+            ra, dec = float(ra), float(dec)
+        except Exception as e:
+            self.log("An error occurred attempting to parse RA,Dec values:", str(e))
+            raise Telescope.PreparationException() from e
+
+        self.api_params = dict(
+            project_id=self.projectid,
+            secure_key=self.secure_key,
+            calibrator=True,  # Hard-coded to always make a calibrator observation.
+            ra=ra,
+            dec=dec,
+            avoidsun=True,  # Hard-coded to always place sun in null.
+            freqspecs=json.dumps(self.frequency.split()),
+            tileset=self.tileset,
+            pretend=(not self.trigger.active),
+        )
+        self.log("API params", json.dumps(self.api_params, indent=4))
+
+    def make_request(self, observation: Observation):
+        try:
+            response = requests.get(
+                "http://mro.mwa128t.org/trigger/triggervcs", params=self.api_params
             )
             response.raise_for_status()
 
@@ -308,8 +377,8 @@ class ATCA(Telescope):
 
         try:
             event = observation.decision.event
-            ra = event.querylatest(self.trigger.ra_path)
-            dec = event.querylatest(self.trigger.dec_path)
+            ra = event.querylatest(self.ra_path)
+            dec = event.querylatest(self.dec_path)
             coord = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
         except Exception as e:
             self.log("An error occurred attempting to parse RA,Dec values", str(e))
