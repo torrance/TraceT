@@ -180,6 +180,10 @@ form div.field:not(.hidden) {
     }
 }
 
+ul.help-text {
+    font-size: 80%;
+}
+
 span.vote {
     height: 25px;
     width: 25px;

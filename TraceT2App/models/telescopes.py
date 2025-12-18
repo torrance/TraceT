@@ -1,14 +1,23 @@
+from base64 import b64decode
 import datetime
+from io import BytesIO
 import json
 import logging
+import traceback
 
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
+import astropy.time
+from astropy.table import Table
 from astropy.units import hourangle
+import astropy_healpix as ah
+import numpy as np
 import requests
 
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 
 from TraceT2App.models import Event, Trigger, Decision
 
@@ -77,10 +86,16 @@ class Telescope(models.Model):
         self._logs = []
         return super().__init__(*args, **kwargs)
 
-    def log(self, title: str, message: str):
+    def log(self, title: str, message: str | BaseException):
         timestamp = datetime.datetime.now(datetime.UTC).isoformat()
         self._logs.append("\n" + timestamp + ": " + title + "\n")
-        self._logs.extend(["> " + line for line in message.splitlines()])
+
+        if issubclass(type(message), BaseException):
+            self._logs.extend(
+                ["> " + line.strip() for line in traceback.format_exception(message)]
+            )
+        else:
+            self._logs.extend(["> " + line for line in str(message).splitlines()])
 
     def get_log(self) -> str:
         return "\n".join(self._logs).strip()
@@ -110,7 +125,7 @@ class Telescope(models.Model):
         except Exception as e:
             self.log(
                 "An unknown exception was thrown during Telescope.create_observation()",
-                str(e),
+                e,
             )
 
             observation.status = Observation.Status.UNKNOWN_FAILURE
@@ -140,8 +155,8 @@ class Telescope(models.Model):
         ):
             self.log(
                 "Clashing observation",
-                f"Existing observation (id={current_observation.id} in effect with "
-                f"priority {current_observation.priority} (>= {observation.priority})",
+                f"Existing observation (id={current_observation.id}) in effect with "
+                f"priority {current_observation.priority} (versus our priority: {observation.priority})",
             )
             raise Telescope.OverrideException()
 
@@ -173,7 +188,7 @@ class MWABase(Telescope):
     )
     frequency = models.CharField(
         max_length=500,
-        help_text=(
+        help_text=mark_safe(
             "A space separated list of MWA coarse channel specifications. The specification format "
             "is documented <a href='https://mwatelescope.atlassian.net/wiki/spaces/MP/pages/24972656/Triggering+web+services#Channel-selection-specifier-strings'>here.</a> "
             "For example: '145,24' will observe with 24 channels centered at channel 145; a space "
@@ -223,7 +238,7 @@ class MWACorrelator(MWABase):
             dec = event.querylatest(self.dec_path)
             ra, dec = float(ra), float(dec)
         except Exception as e:
-            self.log("An error occurred attempting to parse RA,Dec values:", str(e))
+            self.log("An error occurred attempting to parse RA,Dec values:", e)
             raise Telescope.PreparationException() from e
 
         self.api_params = dict(
@@ -249,11 +264,11 @@ class MWACorrelator(MWABase):
             response = json.loads(response.text)
             self.log("Pretty API response", json.dumps(response, indent=4))
         except requests.RequestException as e:
-            self.log("An error occurred making the HTTP request to the MWA API", str(e))
+            self.log("An error occurred making the HTTP request to the MWA API", e)
             raise Telescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
-            self.log("The MWA API returned invalid JSON", str(e))
+            self.log("The MWA API returned invalid JSON", e)
 
         if response.get("success", False):
             observation.finish = datetime.datetime.now(
@@ -286,7 +301,7 @@ class MWAVCS(MWABase):
             dec = event.querylatest(self.dec_path)
             ra, dec = float(ra), float(dec)
         except Exception as e:
-            self.log("An error occurred attempting to parse RA,Dec values:", str(e))
+            self.log("An error occurred attempting to parse RA,Dec values:", e)
             raise Telescope.PreparationException() from e
 
         self.api_params = dict(
@@ -312,11 +327,142 @@ class MWAVCS(MWABase):
             response = json.loads(response.text)
             self.log("Pretty API response", json.dumps(response, indent=4))
         except requests.RequestException as e:
-            self.log("An error occurred making the HTTP request to the MWA API", str(e))
+            self.log("An error occurred making the HTTP request to the MWA API", e)
             raise Telescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
-            self.log("The MWA API returned invalid JSON", str(e))
+            self.log("The MWA API returned invalid JSON", e)
+
+        if response.get("success", False):
+            observation.finish = datetime.datetime.now(
+                datetime.UTC
+            ) + datetime.timedelta(
+                seconds=self.nobs * len(self.frequency.split()) * self.exposure
+                + 120  # 120 is the default calibration time
+            )
+        else:
+            raise Telescope.RejectionException()
+
+
+class MWAGW(MWABase):
+    class SweetSpots:
+        MWA = EarthLocation.from_geodetic(
+            lat="-26:42:11.95", lon="116:40:14.93", height=377.8
+        )
+
+        def __init__(self):
+            with open(settings.MWA_SWEET_SPOTS_PATH) as f:
+                # SWEET SPOTS file has two line of header (which we skip)
+                # and then 4 "|"-delineated columns:
+                # ID | Azimuth [deg] | Eelevation [deg] | Delays
+                # We are only interested in the direction of the sweet spots.
+                try:
+                    lines = f.readlines()[2:]
+                    azs = [
+                        Angle(float(line.split("|")[1]), unit="deg") for line in lines
+                    ]
+                    els = [
+                        Angle(float(line.split("|")[2]), unit="deg") for line in lines
+                    ]
+                except Exception as e:
+                    raise Exception(
+                        "An error occurred reading or parsing the MWA sweet spots database"
+                    ) from e
+
+                self.sweetspots = AltAz(
+                    az=azs, alt=els, location=self.MWA, obstime=astropy.time.Time.now()
+                )
+
+        def get_nearest(self, coord: SkyCoord) -> AltAz:
+            return self.sweetspots[np.argmin(self.sweetspots.separation(coord))]
+
+    # TODO: Remove tileset: we use a fixed set of 4 subarrays
+    skymap_path = models.CharField(
+        max_length=500,
+        help_text="The (x|j)path to the embedded skymap. This value is set by the most recent matching notice.",
+    )
+
+    def __str__(self):
+        return "MWA GW Configuration"
+
+    def prepare_request(self, observation: Observation):
+        try:
+            event = observation.decision.event
+            skymapb64 = event.querylatest(self.skymap_path)
+            # TODO: Handle case where skymap is a url to a fits file
+            skymap = Table.read(BytesIO(b64decode(skymapb64)))
+        except Exception as e:
+            self.log("An error occurred attempting to read the skymap", e)
+            raise Telescope.PreparationException() from e
+
+        try:
+            # Calculate 4 pointings that:
+            # - are MWA sweetspots
+            # - are chosen greedily in order of the skymap's probability density
+            # - are separated by at least (minsep) degrees
+
+            # First, list the SkyCoord values of the skymap _in order_ of probability
+            # density (highest to lowest)
+            uniqs = skymap[np.flip(np.argsort(skymap["PROBDENSITY"]))]["UNIQ"]
+            levels, ipixs = ah.uniq_to_level_ipix(uniqs)
+            ras, decs = ah.healpix_to_lonlat(
+                ipixs, ah.level_to_nside(levels), order="nested"
+            )
+            coords = SkyCoord(ras, decs)
+            self.log("Ordered SkyMap coordinates", coords)
+
+            # Then: iterate through this list and add a new sweetspot pointing so long as it
+            # is separated from any existing pointings by at least (minsep). Stop when we have 4.
+            sweetspots = self.SweetSpots()
+            pointings: list[AltAz] = []
+            for coord in coords:
+                sweetspot = sweetspots.get_nearest(coord)
+                separations = [sweetspot.separation(c) for c in pointings]
+
+                if min(separations, default=Angle(180, unit="deg")) > Angle(
+                    10, unit="deg"
+                ):
+                    pointings.append(sweetspot)
+
+                if len(pointings) >= 4:
+                    break
+        except Exception as e:
+            self.log(
+                "An error occurred attempting to generate 4 sweetspot pointintings",
+                e,
+            )
+            raise Telescope.PreparationException() from e
+
+        self.api_params = dict(
+            project_id=self.projectid,
+            secure_key=self.secure_key,
+            calibrator=True,  # Hard-coded to always make a calibrator observation.
+            az=[p.az.deg for p in pointings],
+            alt=[p.alt.deg for p in pointings],
+            avoidsun=True,  # Hard-coded to always place sun in null.
+            freqspecs=json.dumps(self.frequency.split()),
+            subarrays=["all_ne", "all_nw", "all_se", "all_sw"],
+            pretend=(not self.trigger.active),
+        )
+        self.log("API params", json.dumps(self.api_params, indent=4))
+
+    def make_request(self, observation: Observation):
+        # TODO: Buffer dump if this is the first notice
+
+        try:
+            response = requests.get(
+                "http://mro.mwa128t.org/trigger/triggervcs", params=self.api_params
+            )
+            response.raise_for_status()
+
+            response = json.loads(response.text)
+            self.log("Pretty API response", json.dumps(response, indent=4))
+        except requests.RequestException as e:
+            self.log("An error occurred making the HTTP request to the MWA API", e)
+            raise Telescope.RequestException() from e
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            self.log("Raw API response", response.text)
+            self.log("The MWA API returned invalid JSON", e)
 
         if response.get("success", False):
             observation.finish = datetime.datetime.now(
@@ -381,7 +527,7 @@ class ATCA(Telescope):
             dec = event.querylatest(self.dec_path)
             coord = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
         except Exception as e:
-            self.log("An error occurred attempting to parse RA,Dec values", str(e))
+            self.log("An error occurred attempting to parse RA,Dec values", e)
             raise Telescope.PreparationException() from e
 
         istest = not self.trigger.active
@@ -432,9 +578,7 @@ class ATCA(Telescope):
             )
             response.raise_for_status()
         except requests.RequestException as e:
-            self.log(
-                "An error occurred making the HTTP request to the ATCA API", str(e)
-            )
+            self.log("An error occurred making the HTTP request to the ATCA API", e)
             raise Telescope.RequestException() from e
 
         self.log("Raw API response", response.text)

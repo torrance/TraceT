@@ -72,11 +72,26 @@
                 <template id="mwa-telescope-template">{% partial mwa %}</template>
             {% endwith %}
 
+            {{ mwagwformset.management_form }}
+
+            {% for form in mwagwformset %}
+                {% partialdef mwagw inline %}
+                    <fieldset class="mwagw-telescope deleteable transition-opacity">
+                        <legend>MWA GW</legend>
+                        {{ form }}
+                    </fieldset>
+                {% endpartialdef %}
+            {% endfor %}
+
+            {% with form=mwagwformset.empty_form %}
+                <template id="mwagw-telescope-template">{% partial mwagw %}</template>
+            {% endwith %}
+
             {{ mwavcsformset.management_form }}
 
             {% for form in mwavcsformset %}
                 {% partialdef mwavcs inline %}
-                    <fieldset class="mwa-telescope deleteable transition-opacity">
+                    <fieldset class="mwavcs-telescope deleteable transition-opacity">
                         <legend>MWA VCS</legend>
                         {{ form }}
                     </fieldset>
@@ -128,6 +143,14 @@
                             </tbody>
                         </table>
 
+                        <ul class="help-text">
+                            {% for field in form.nested.empty_form %}
+                            {% if field.help_text %}
+                                <li><strong>{{field.label }}</strong> {{ field.help_text }}</li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+
                         <template id="{{ form.nested.prefix }}-template">
                             {% with form=form.nested.empty_form %}
                                 {% partial atcaband %}
@@ -148,6 +171,7 @@
 
         <ul>
             <li><a class="fieldset-add" template="mwa-telescope-template" parentnode="telescopes" counter="id_{{ mwaformset.prefix }}-TOTAL_FORMS">Add MWA Correlator telescope</a></li>
+            <li><a class="fieldset-add" template="mwagw-telescope-template" parentnode="telescopes" counter="id_{{ mwagwformset.prefix }}-TOTAL_FORMS">Add MWA GW telescope</a></li>
             <li><a class="fieldset-add" template="mwavcs-telescope-template" parentnode="telescopes" counter="id_{{ mwavcsformset.prefix }}-TOTAL_FORMS">Add MWA VCS telescope</a></li>
             <li><a class="fieldset-add" template="atca-telescope-template" parentnode="telescopes" counter="id_{{ atcaformset.prefix }}-TOTAL_FORMS">Add ATCA telescope</a></li>
         </ul>

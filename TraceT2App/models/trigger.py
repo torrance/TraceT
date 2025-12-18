@@ -132,7 +132,7 @@ class Event(models.Model):
                 if self.time is None or (t and t < self.time):
                     self.time = t
                     self.save()
-            except dateutil.parser.ParserError as e:
+            except (TypeError, dateutil.parser.ParserError) as e:
                 logger.warning(
                     f"Failed to parse time (Trigger id={self.trigger.id}, Notice id={notice.id}) with path {self.trigger.time_path}. Error: {str(e)}"
                 )

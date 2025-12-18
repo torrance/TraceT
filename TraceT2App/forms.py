@@ -116,6 +116,34 @@ MWAVCS.Meta.error_messages = {
 }
 
 
+class MWAGW(forms.ModelForm):
+    template_name = "TraceT2App/forms/base.html"
+
+    class Meta:
+        model = models.MWAGW
+        fields = [
+            "projectid",
+            "secure_key",
+            "skymap_path",
+            "tileset",
+            "frequency",
+            "frequency_resolution",
+            "time_resolution",
+            "exposure",
+            "nobs",
+            "maximum_window",
+            "repointing_threshold",
+        ]
+
+
+MWAGW.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.MWAGW, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in MWAGW.Meta.fields
+}
+
+
 class ATCA(forms.ModelForm):
     template_name = "TraceT2App/forms/base.html"
 

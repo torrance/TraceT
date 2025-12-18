@@ -142,3 +142,5 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+MWA_SWEET_SPOTS_PATH = BASE_DIR / "TraceT2App/data/MWASweetSpots.txt"

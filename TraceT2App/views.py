@@ -140,6 +140,12 @@ class TriggerBase(View):
                 form=forms.MWACorrelator,
                 extra=0,
             )(post, instance=self.trigger),
+            mwagwformset=inlineformset_factory(
+                models.Trigger,
+                models.MWAGW,
+                form=forms.MWAGW,
+                extra=0,
+            )(post, instance=self.trigger),
             mwavcsformset=inlineformset_factory(
                 models.Trigger,
                 models.MWAVCS,

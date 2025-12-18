@@ -35,6 +35,25 @@ wheels = [
 ]
 
 [[package]]
+name = "astropy-healpix"
+version = "1.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astropy" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5c/8a/dfd71e4db13706383ca2cea0b2831eb10da2c286d4494f183f80fc03cbc2/astropy_healpix-1.1.2.tar.gz", hash = "sha256:03671df12a36ec3b357c244d5154b6786362ff5d80770675c7b24815101066e4", size = 109453, upload-time = "2025-02-19T19:38:06.814Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/35/be/0caad18d7077c2547c1225bfff3edb691e03495b8952541d000cf40234b7/astropy_healpix-1.1.2-cp310-abi3-macosx_10_9_x86_64.whl", hash = "sha256:fb504c998e1661215c74da9537558cd2048d29b44acb2d63e613aae133b91668", size = 85424, upload-time = "2025-02-19T19:37:53.808Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/38/eb2897df8b0cba6d8dd0d08571fa7f2277002a46feb4c97fa121f3878c30/astropy_healpix-1.1.2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:00a0c9378d7e844aecb23d62c206a999e045a48781a320ac5f012f8c95ac4022", size = 81721, upload-time = "2025-02-19T19:37:55.72Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/40/0382c85a995008ba8e2f99e28d143cfe9f0a835e3a2088c36a4947c93420/astropy_healpix-1.1.2-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ee37b14700d28cf53e2376c65f8cb6224a59f80067feb3f3cd6dd6f9a4577337", size = 191974, upload-time = "2025-02-19T19:37:56.791Z" },
+    { url = "https://files.pythonhosted.org/packages/31/01/b5d91f29f36ab9fb220ef3e820dd3046f9f671fc1ec99644369dc606840b/astropy_healpix-1.1.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cf7a616af0b7df9c1d96f6af1e12382f29bd43e3fb88ce98f46992bfa23a149e", size = 195201, upload-time = "2025-02-19T19:38:00.034Z" },
+    { url = "https://files.pythonhosted.org/packages/39/51/54770150df54c09b06c00f24481317abcb4b6478a99772a5df399894306d/astropy_healpix-1.1.2-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:3526008fc5ccd4c13f3166a878bfb856b909a00912b27d26666992615c668e88", size = 191335, upload-time = "2025-02-19T19:38:02.038Z" },
+    { url = "https://files.pythonhosted.org/packages/da/5b/6bafcee285e9ef653449742e6d0ba6974e97cbffccac99727d8606e610b6/astropy_healpix-1.1.2-cp310-abi3-win32.whl", hash = "sha256:94f4a2fcee2e66ab68f8face8d20be4553cbf6ce81bd214052ddf307e2118513", size = 52693, upload-time = "2025-02-19T19:38:04.662Z" },
+    { url = "https://files.pythonhosted.org/packages/01/6d/07a6dcd87aec162b9cb63167ccb3919a4f6ee739ce32035cd44887ae8708/astropy_healpix-1.1.2-cp310-abi3-win_amd64.whl", hash = "sha256:f6b3e50c49e73a66bb1847dc3451e1d22bf828c10881275bf359928e95d25fe3", size = 54830, upload-time = "2025-02-19T19:38:05.709Z" },
+]
+
+[[package]]
 name = "astropy-iers-data"
 version = "0.2025.12.8.0.38.44"
 source = { registry = "https://pypi.org/simple" }
@@ -412,6 +431,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "astropy" },
+    { name = "astropy-healpix" },
     { name = "django" },
     { name = "django-filter" },
     { name = "django-nested-admin" },
@@ -426,6 +446,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=7.1.1" },
+    { name = "astropy-healpix", specifier = ">=1.1.2" },
     { name = "django", specifier = ">=5.2.7" },
     { name = "django-filter", specifier = ">=25.2" },
     { name = "django-nested-admin", specifier = ">=4.1.6" },
