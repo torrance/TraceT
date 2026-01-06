@@ -9,6 +9,7 @@ urlpatterns = [
     path("observations", views.ObservationList.as_view(),name="observations"),
     path("observations/<int:id>", views.ObservationView.as_view(), name="observationview"),
 
+    path("triggers", views.TriggerList.as_view(), name="triggers"),
     path("triggers/create", views.TriggerCreate.as_view(), name="triggercreate"),
     path("triggers/<int:id>", views.TriggerView.as_view(), name="triggerview"),
     path("triggers/<int:id>/update", views.TriggerUpdate.as_view(), name="triggeredit"),

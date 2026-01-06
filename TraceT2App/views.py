@@ -109,6 +109,57 @@ class ObservationView(View):
         )
 
 
+class TriggerList(View):
+    TriggerFormset = modelformset_factory(
+        models.Trigger,
+        form=forms.TriggerAdmin,
+        extra=0,
+        edit_only=True,
+    )
+
+    def get(self, request):
+        activetriggers = self.TriggerFormset(
+            prefix="activetriggers",
+            queryset=models.Trigger.objects.order_by("-priority").filter(active=True),
+        )
+        inactivetriggers = self.TriggerFormset(
+            prefix="inactivetriggers",
+            queryset=models.Trigger.objects.order_by("-priority").filter(active=False),
+        )
+
+        return render(
+            request,
+            "TraceT2App/trigger/list.html",
+            {"activetriggers": activetriggers, "inactivetriggers": inactivetriggers},
+        )
+
+    def post(self, request):
+        activetriggers = self.TriggerFormset(request.POST, prefix="activetriggers")
+        inactivetriggers = self.TriggerFormset(request.POST, prefix="inactivetriggers")
+
+        if activetriggers.is_valid() and inactivetriggers.is_valid():
+            activetriggers.save()
+            inactivetriggers.save()
+            messages.success(
+                request,
+                "Trigger statuses and priorities have been successfully updated.",
+            )
+            return HttpResponseRedirect(reverse("triggers"))
+        else:
+            messages.success(
+                request,
+                "Trigger statusesand/or priorities could not be updated due to a form error.",
+            )
+            return render(
+                request,
+                "TraceT2App/trigger/list.html",
+                {
+                    "activetriggers": activetriggers,
+                    "inactivetriggers": inactivetriggers,
+                },
+            )
+
+
 class TriggerBase(View):
     def setup(self, request, id=None):
         super().setup(request, id)

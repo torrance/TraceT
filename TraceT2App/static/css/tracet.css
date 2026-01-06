@@ -418,6 +418,24 @@ form#trigger {
     }
 }
 
+table.trigger-list {
+    th, td {
+        text-align: left;
+    }
+
+    td.field.priority input {
+        width: 3rem;
+    }
+
+    tr.empty-list td {
+        text-align: center;
+    }
+
+    tr.empty-list:has(+ tr), tr + tr.empty-list {
+        display: none;
+    }
+}
+
 
     #id_active {
 position: relative;

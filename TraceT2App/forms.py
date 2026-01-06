@@ -17,7 +17,7 @@ class DateTimeInput(forms.DateTimeInput):
 class Trigger(forms.ModelForm):
     class Meta:
         model = models.Trigger
-        fields = ["name", "active", "streams", "groupby", "time_path"]
+        fields = ["name", "streams", "groupby", "time_path"]
 
 
 class NumericRangeCondition(forms.ModelForm):
@@ -344,3 +344,9 @@ class Notice(forms.Form):
 
 class EventTrigger(forms.Form):
     eventid = forms.IntegerField(widget=forms.HiddenInput)
+
+
+class TriggerAdmin(forms.ModelForm):
+    class Meta:
+        model = models.Trigger
+        fields = ["priority", "active"]

@@ -84,6 +84,15 @@ class Trigger(models.Model):
             )
         ]
 
+    def get_last_attempted_observation(self):
+        return (
+            TraceT2App.models.Observation.objects.filter(
+                decision__event__trigger__id=self.id
+            )
+            .order_by("-created")
+            .first()
+        )
+
 
 class Event(models.Model):
     class Manager(models.Manager):
