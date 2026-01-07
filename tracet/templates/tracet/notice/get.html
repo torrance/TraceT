@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Notice {{ notice.id }}{% endblock %}
+
+{% block content %}
+<h1>Notice {{ notice.id }}</h1>
+
+<p>{{ notice.created }}</p>
+
+<p>Stream: <code>{{ notice.stream }}</code></p>
+
+<pre style="overflow: scroll;">{{ notice.pretty_payload }}</pre>
+{% endblock %}

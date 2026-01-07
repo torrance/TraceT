@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Triggers{% endblock %}
+
+{% block content %}
+<h1>Triggers</h1>
+
+<form action="{% url "triggers" %}" method="post">
+    {% csrf_token %}
+
+    {% with formset=activetriggers label="active" %}
+        {% partialdef triggerlist inline %}
+            {% for form in formset %}
+                {% include "tracet/forms/errors.html" with form=form %}
+            {% endfor %}
+
+            <table class="trigger-list" data-trigger-active={{ label }}>
+                <thead>
+                    <tr><th colspan=5>{{ label | capfirst }}</th></tr>
+                    <tr><th class="trigger-handle hidden"></th><th class="field priority">Priority</th><th>Name</th><th>Observatories</th><th>Last attempted observation</th><th class="field active">Active</th></tr>
+                </thead>
+                <tbody>
+                {{ formset.management_form }}
+                {% for form in formset %}
+                    {{ form.errors }}
+                    {% with trigger=form.instance %}
+                        <tr>
+                            <td class="trigger-handle hidden"><i class="fa-solid fa-sort"></i>{{ form.id }}</td>
+                            <td class="field priority"><span data-mirror-input="input#id_{{ form.prefix }}-priority"></span>{{ form.priority }}</td>
+                            <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
+                            <td>
+                                {% for telescope in trigger.get_telescopes %}
+                                    <code>{{ telescope.OBSERVATORY }}</code>
+                                {% endfor %}
+                            </td>
+                            {% with obs=trigger.get_last_attempted_observation %}
+                                <td>{% if obs is not None %}{{ obs.created | timesince }} ago {% if obs.istest %}(test){% endif %}{% else %}—{% endif %}</td>
+                            {% endwith %}
+                            <td class="field active">{{ form.active }}</td>
+                        </tr>
+                    {% endwith %}
+                {% endfor %}
+                <tr class="empty-list"><td colspan=5>There are currently no {{ label }} triggers. <a href="{% url 'triggercreate' %}">Create a trigger.</a></td></tr>
+                </tbody>
+            </table>
+        {% endpartialdef %}
+    {% endwith %}
+
+    <p></p>
+
+    {% with formset=inactivetriggers label="inactive" %}
+        {% partial triggerlist %}
+    {% endwith %}
+
+    <input type="submit" value="Update triggers">
+</form>
+
+
+{% endblock %}
