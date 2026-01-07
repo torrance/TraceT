@@ -7,8 +7,6 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils import timezone
 
-from TraceT2App.models import Notice
-from TraceT2App.models import Trigger, Event
 from TraceT2App.utils import truthy
 
 
@@ -38,7 +36,9 @@ class Decision(models.Model):
 
     objects = Manager()
 
-    event = models.ForeignKey(Event, related_name="decisions", on_delete=models.CASCADE)
+    event = models.ForeignKey(
+        "Event", related_name="decisions", on_delete=models.CASCADE
+    )
     created = models.DateTimeField(default=timezone.now)
     source = models.CharField(choices=Source)
 
@@ -101,7 +101,7 @@ class Decision(models.Model):
 
 class Factor(models.Model):
     decision = models.ForeignKey(
-        Decision, related_name="factors", on_delete=models.CASCADE
+        "Decision", related_name="factors", on_delete=models.CASCADE
     )
 
     condition = models.TextField()
@@ -133,7 +133,7 @@ class NumericRangeCondition(models.Model):
     val2 = models.FloatField(verbose_name="Upper bound")
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
-    trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)
+    trigger = models.ForeignKey("Trigger", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"IF {self.val1} ≤ {self.selector} < {self.val2} THEN {self.get_if_true_display()} ELSE {self.get_if_false_display()}"
@@ -157,12 +157,12 @@ class BooleanCondition(models.Model):
     selector = models.CharField(max_length=250)
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
-    trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)
+    trigger = models.ForeignKey("Trigger", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"IF {self.selector} THEN {self.get_if_true_display()} ELSE {self.get_if_false_display()}"
 
-    def vote(self, notice: Notice) -> vote.Vote:
+    def vote(self, notice: "Notice") -> vote.Vote:
         try:
             val = notice.query(self.selector)
             if val is None:
@@ -182,7 +182,7 @@ class ContainsCondition(models.Model):
     vals = models.TextField()
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
-    trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)
+    trigger = models.ForeignKey("Trigger", on_delete=models.CASCADE)
 
     def __str__(self):
         vals = self.get_vals()

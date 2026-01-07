@@ -19,8 +19,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 
-from TraceT2App.models import Event, Trigger, Decision
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +38,7 @@ class Observation(models.Model):
         UNKNOWN_FAILURE = "unknown_failure", "An unexpected failure occurred"
 
     decision = models.ForeignKey(
-        Decision, null=True, on_delete=models.SET_NULL, related_name="observations"
+        "Decision", null=True, on_delete=models.SET_NULL, related_name="observations"
     )
     created = models.DateTimeField(default=timezone.now)
     finish = models.DateTimeField(null=True)
@@ -177,7 +175,7 @@ class MWABase(Telescope):
     OBSERVATORY = "MWA"
 
     trigger = models.OneToOneField(
-        Trigger, related_name="%(class)s", on_delete=models.CASCADE
+        "Trigger", related_name="%(class)s", on_delete=models.CASCADE
     )
 
     projectid = models.CharField(max_length=500)
@@ -480,7 +478,7 @@ class ATCA(Telescope):
     OBSERVATORY = "ATCA"
 
     trigger = models.OneToOneField(
-        Trigger, related_name="%(class)s", on_delete=models.CASCADE
+        "Trigger", related_name="%(class)s", on_delete=models.CASCADE
     )
     projectid = models.CharField(max_length=500)
     http_username = models.CharField(max_length=500, verbose_name="HTTP Username")

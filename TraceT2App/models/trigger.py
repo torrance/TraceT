@@ -11,9 +11,7 @@ from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
 
-import TraceT2App.models
-from TraceT2App.models import GCNStream, Notice
-
+from TraceT2App.models.telescopes import Observation, Telescope
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +31,7 @@ class Trigger(models.Model):
         default=False,
         help_text="Inactive triggers will send observation requests to observatories marked as testing only.",
     )
-    streams = models.ManyToManyField(GCNStream)
+    streams = models.ManyToManyField("GCNStream")
     groupby = models.CharField(max_length=500)
     time_path = models.CharField(
         max_length=250,
@@ -48,7 +46,7 @@ class Trigger(models.Model):
     def get_absolute_url(self):
         return reverse("triggerview", args=[self.id])
 
-    def get_or_create_event(self, notice: Notice) -> Optional["Event"]:
+    def get_or_create_event(self, notice: "Notice") -> Optional["Event"]:
         # Check if we are listening to this particular stream
         if not self.streams.filter(id=notice.stream.id).exists():
             return None
@@ -80,13 +78,13 @@ class Trigger(models.Model):
             for attr in dir(self)
             if hasattr(self, attr)
             and issubclass(
-                type(getattr(self, attr)), TraceT2App.models.telescopes.Telescope
+                type(getattr(self, attr)), Telescope
             )
         ]
 
     def get_last_attempted_observation(self):
         return (
-            TraceT2App.models.Observation.objects.filter(
+            Observation.objects.filter(
                 decision__event__trigger__id=self.id
             )
             .order_by("-created")
@@ -110,8 +108,8 @@ class Event(models.Model):
 
     objects = Manager()
 
-    trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE)
-    notices = models.ManyToManyField(Notice)
+    trigger = models.ForeignKey("Trigger", on_delete=models.CASCADE)
+    notices = models.ManyToManyField("Notice")
     groupid = models.CharField(max_length=500)
     time = models.DateTimeField(null=True)
 

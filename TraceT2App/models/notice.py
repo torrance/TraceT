@@ -26,7 +26,7 @@ class GCNStream(models.Model):
 
 
 class Notice(models.Model):
-    stream = models.ForeignKey(GCNStream, on_delete=models.CASCADE)
+    stream = models.ForeignKey("GCNStream", on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
     payload = models.BinaryField()
     istest = models.BooleanField(default=False)
