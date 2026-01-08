@@ -291,12 +291,6 @@ span.gcn-status.fail {
     margin: 0rem 0 3rem 0;
     font-size: 95%;
     align-items: center;
-
-    button {
-        margin: 0 0 0 auto;
-        padding: 0.1rem 0.2rem;
-        font-size: 90%;
-    }
 }
 
 form#trigger {

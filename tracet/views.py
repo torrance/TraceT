@@ -2,6 +2,7 @@ import logging
 
 from django.core.paginator import EmptyPage, Paginator
 from django.contrib import messages
+from django.contrib.auth import get_user
 from django.forms import formset_factory, modelformset_factory, inlineformset_factory
 from django.shortcuts import (
     get_object_or_404,
@@ -164,15 +165,18 @@ class TriggerBase(View):
     def setup(self, request, id=None):
         super().setup(request, id)
 
-        try:
-            self.trigger = models.Trigger.objects.get(id=id)
-        except models.Trigger.DoesNotExist:
+        if id is not None:
+            self.trigger = get_object_or_404(models.Trigger, id=id)
+        else:
             self.trigger = None
 
         post = request.POST if request.POST else None
+        user = get_user(request) if self.trigger is None else self.trigger.user
 
         self.forms = dict(
-            triggerform=forms.Trigger(post, instance=self.trigger),
+            triggerform=forms.Trigger(
+                post, initial={"user": user}, instance=self.trigger
+            ),
             rangeformset=inlineformset_factory(
                 models.Trigger,
                 models.NumericRangeCondition,

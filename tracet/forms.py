@@ -1,7 +1,9 @@
 import json
 
-from django import forms
 from lxml import etree
+
+from django import forms
+from django.contrib.auth import get_user_model
 
 from . import models
 
@@ -15,9 +17,13 @@ class DateTimeInput(forms.DateTimeInput):
 
 
 class Trigger(forms.ModelForm):
+    user = forms.ModelChoiceField(
+        get_user_model().objects, disabled=True, widget=forms.HiddenInput
+    )
+
     class Meta:
         model = models.Trigger
-        fields = ["name", "streams", "groupby", "time_path"]
+        fields = ["name", "user", "streams", "groupby", "time_path"]
 
 
 class NumericRangeCondition(forms.ModelForm):
