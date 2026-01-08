@@ -16,8 +16,8 @@
 
             <table class="trigger-list" data-trigger-active={{ label }}>
                 <thead>
-                    <tr><th colspan=5>{{ label | capfirst }}</th></tr>
-                    <tr><th class="trigger-handle hidden"></th><th class="field priority">Priority</th><th>Name</th><th>Observatories</th><th>Last attempted observation</th><th class="field active">Active</th></tr>
+                    <tr><th colspan=7>{{ label | capfirst }}</th></tr>
+                    <tr><th class="trigger-handle hidden"></th><th class="field priority">Priority</th><th>Name</th><th>Owner</th><th>Created</th><th>Observatories</th><th>Last attempted observation</th><th class="field active">Active</th></tr>
                 </thead>
                 <tbody>
                 {{ formset.management_form }}
@@ -28,6 +28,8 @@
                             <td class="trigger-handle hidden"><i class="fa-solid fa-sort"></i>{{ form.id }}</td>
                             <td class="field priority"><span data-mirror-input="input#id_{{ form.prefix }}-priority"></span>{{ form.priority }}</td>
                             <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
+                            <td>{{ trigger.user.username }}</td>
+                            <td>{{ trigger.created | date:"Y-M-d" }}</td>
                             <td>
                                 {% for telescope in trigger.get_telescopes %}
                                     <code>{{ telescope.OBSERVATORY }}</code>
@@ -40,7 +42,7 @@
                         </tr>
                     {% endwith %}
                 {% endfor %}
-                <tr class="empty-list"><td colspan=5>There are currently no {{ label }} triggers. <a href="{% url 'triggercreate' %}">Create a trigger.</a></td></tr>
+                <tr class="empty-list"><td colspan=7>There are currently no {{ label }} triggers. <a href="{% url 'triggercreate' %}">Create a trigger.</a></td></tr>
                 </tbody>
             </table>
         {% endpartialdef %}

@@ -28,6 +28,18 @@ main {
     padding-top: 0;
 }
 
+.inlinemodal {
+  border: 1px solid var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow) var(--color-shadow);
+  display: block;
+  max-width: var(--width-card-wide);
+  min-width: var(--width-card);
+  padding: 1.5rem;
+  margin: 0 auto;
+  text-align: var(--justify-normal);
+}
+
 .heading-label, .trigger-active, .trigger-inactive {
     border-radius: var(--border-radius);
     text-transform: uppercase;
@@ -62,7 +74,8 @@ form#logout {
     box-shadow: none;
 
     input {
-        padding: 0.4rem 0.8rem;
+        padding: 0.1rem 0.2rem;
+        font-size: 90%;
     }
 }
 
@@ -267,6 +280,23 @@ span.gcn-status.fail {
     background-color: var(--color-fail);
     color: var(--color-fail);  /* fallback */
     color: rgba(0, 0, 0, 0);
+}
+
+#trigger-meta {
+    display: flex;
+    column-gap: 2rem;
+    background: var(--color-accent);
+    border-radius: var(--border-radius);
+    padding: 0.4rem 0.9rem;
+    margin: 0rem 0 3rem 0;
+    font-size: 95%;
+    align-items: center;
+
+    button {
+        margin: 0 0 0 auto;
+        padding: 0.1rem 0.2rem;
+        font-size: 90%;
+    }
 }
 
 form#trigger {

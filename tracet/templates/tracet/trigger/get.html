@@ -8,7 +8,7 @@
 {% if trigger.active %}<div class="trigger-active">Active</div>{% else %}<div class="trigger-inactive">Inactive</div>{% endif %}
 <h1>{{ trigger.name }}</h1>
 
-<p></p><a href="{% url 'triggeredit' id=trigger.id %}">Edit trigger</a><p></p>
+<div id="trigger-meta"><span><strong>Author</strong> &nbsp; {{ trigger.user.username }}</span> <span><strong>Created</strong> &nbsp; {{ trigger.created | date:"Y-M-d" }}</span> <button href="{% url 'triggeredit' id=trigger.id %}">Edit trigger</button></div>
 
 <h2>Streams</h2>
 
@@ -18,7 +18,7 @@
     {% endfor %}
 </ul>
 
-<h2>Metadata</h2>
+<h2>Selectors</h2>
 
 <ul display: table;>
     <li><strong style="display: inline-block; min-width: 8rem">Group ID path:</strong> <code>{{ trigger.groupby }}</code></li>
