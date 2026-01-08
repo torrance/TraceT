@@ -7,6 +7,7 @@ from astropy.coordinates import SkyCoord
 import dateutil
 
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
@@ -26,6 +27,8 @@ class Trigger(models.Model):
             )
 
     name = models.CharField(max_length=250)
+    user = models.ForeignKey(get_user_model(), related_name="triggers", on_delete=models.CASCADE)
+    created = models.DateField(default=timezone.now)
     priority = models.IntegerField(default=0)
     active = models.BooleanField(
         default=False,
