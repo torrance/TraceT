@@ -1,14 +1,25 @@
 {% extends "base.html" %}
 
+{% load rules %}
+
 {% block title %}Trigger {{ trigger.id }}{% endblock %}
 
 {% block content %}
+
+{% has_perm "tracet.change_trigger" user trigger as can_edit %}
+{% has_perm "tracet.retrigger_trigger" user trigger as can_retrigger %}
 
 <div class="heading-label">Trigger</div>
 {% if trigger.active %}<div class="trigger-active">Active</div>{% else %}<div class="trigger-inactive">Inactive</div>{% endif %}
 <h1>{{ trigger.name }}</h1>
 
-<div id="trigger-meta"><span><strong>Author</strong> &nbsp; {{ trigger.user.username }}</span> <span><strong>Created</strong> &nbsp; {{ trigger.created | date:"Y-M-d" }}</span> <a href="{% url 'triggeredit' id=trigger.id %}">Edit trigger</a></div>
+<div id="trigger-meta">
+    <span><strong>Author</strong> &nbsp; {{ trigger.user.username }}</span>
+    <span><strong>Created</strong> &nbsp; {{ trigger.created | date:"Y-M-d" }}</span>
+    {% if can_edit %}
+        <a href="{% url 'triggeredit' id=trigger.id %}">Edit trigger</a>
+    {% endif %}
+</div>
 
 <h2>Streams</h2>
 
@@ -43,11 +54,13 @@
 
     <p style="display: inline-block; width: unset;">{{ event.time | date:"Y-M-d G:i:s e" }}</p>
 
-    <form method="post" style="display: inline-block; min-width: unset; padding: 0; border: none;">
-        {% csrf_token %}
-        {{ event.form }}
-        <input style="padding: 0.2rem 0.4rem; margin: 0;" type="submit" value="Retrigger" onclick="return confirm('Are you sure? Retriggering this event group may result in observation requests being sent.');">
-    </form>
+    {% if can_retrigger %}
+        <form method="post" style="display: inline-block; min-width: unset; padding: 0; border: none;">
+            {% csrf_token %}
+            {{ event.form }}
+            <input style="padding: 0.2rem 0.4rem; margin: 0;" type="submit" value="Retrigger" onclick="return confirm('Are you sure? Retriggering this event group may result in observation requests being sent.');">
+        </form>
+    {% endif %}
 </div>
 
 <table>

@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 
+{% load rules %}
+
 {% block title %}Triggers{% endblock %}
 
 {% block content %}
+
+{% has_perm tracet.admin_triggers user as can_admin_triggers %}
+
 <h1>Triggers</h1>
 
-<form action="{% url "triggers" %}" method="post">
+<form action="{% url "triggers" %}" method="post" disabled="{{ can_admin_triggers | yesno:'false,true' }}">
     {% csrf_token %}
 
     {% with formset=activetriggers label="active" %}
@@ -54,7 +59,11 @@
         {% partial triggerlist %}
     {% endwith %}
 
-    <input type="submit" value="Update triggers">
+    {% if activetriggers|length or inactivetriggers|length %}
+        {% if can_admin_triggers %}
+            <input type="submit" value="Update triggers">
+        {% endif %}
+    {% endif %}
 </form>
 
 

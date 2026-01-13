@@ -356,3 +356,11 @@ class TriggerAdmin(forms.ModelForm):
     class Meta:
         model = models.Trigger
         fields = ["priority", "active"]
+
+class TriggerAdminDisabled(forms.ModelForm):
+    priority = forms.IntegerField(disabled=True)
+    active = forms.BooleanField(disabled=True)
+
+    class Meta:
+        model = models.Trigger
+        fields = ["priority", "active"]

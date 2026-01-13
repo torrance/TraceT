@@ -1,5 +1,6 @@
 import logging
 
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import EmptyPage, Paginator
 from django.contrib import messages
 from django.contrib.auth import get_user
@@ -111,12 +112,21 @@ class ObservationView(View):
 
 
 class TriggerList(View):
-    TriggerFormset = modelformset_factory(
-        models.Trigger,
-        form=forms.TriggerAdmin,
-        extra=0,
-        edit_only=True,
-    )
+    def setup(self, request):
+        super().setup(request)
+
+        user = get_user(request)
+        if user.has_perm("tracet.admin_triggers"):
+            Form = forms.TriggerAdmin
+        else:
+            Form = forms.TriggerAdminDisabled
+
+        self.TriggerFormset = modelformset_factory(
+            models.Trigger,
+            form=Form,
+            extra=0,
+            edit_only=True,
+        )
 
     def get(self, request):
         activetriggers = self.TriggerFormset(
@@ -131,7 +141,11 @@ class TriggerList(View):
         return render(
             request,
             "tracet/trigger/list.html",
-            {"activetriggers": activetriggers, "inactivetriggers": inactivetriggers},
+            {
+                "user": get_user(request),
+                "activetriggers": activetriggers,
+                "inactivetriggers": inactivetriggers,
+            },
         )
 
     def post(self, request):
@@ -155,6 +169,7 @@ class TriggerList(View):
                 request,
                 "tracet/trigger/list.html",
                 {
+                    "user": get_user(request),
                     "activetriggers": activetriggers,
                     "inactivetriggers": inactivetriggers,
                 },
@@ -255,16 +270,23 @@ class TriggerBase(View):
 
 class TriggerCreate(TriggerBase):
     def setup(self, request):
+        user = get_user(request)
+        if not user.has_perm("tracet.add_trigger"):
+            raise PermissionDenied("You do not have permission to create triggers.")
+
         super().setup(request)
         self.title = "Create a new trigger"
         self.actionurl = reverse("triggercreate")
-
-        del self.forms["triggerform"].fields["active"]
 
 
 class TriggerUpdate(TriggerBase):
     def setup(self, request, id):
         super().setup(request, id)
+
+        user = get_user(request)
+        if not user.has_perm("tracet.change_trigger", self.trigger):
+            raise PermissionDenied("You do not have permission to edit this trigger.")
+
         self.title = f"Update {self.trigger.name}"
         self.actionurl = reverse("triggeredit", args=[id])
 
@@ -272,6 +294,11 @@ class TriggerUpdate(TriggerBase):
 class TriggerDelete(View):
     def post(self, request, id):
         trigger = get_object_or_404(models.Trigger, id=id)
+
+        user = get_user(request)
+        if not user.has_perm("tracet.delete_trigger", trigger):
+            raise PermissionDenied("You do not have permission to delete this trigger.")
+
         trigger.delete()
 
         messages.success(request, "Trigger was deleted")
@@ -281,6 +308,10 @@ class TriggerDelete(View):
 class TriggerView(View):
     def get(self, request, id):
         trigger = get_object_or_404(models.Trigger, id=id)
+
+        user = get_user(request)
+        if not user.has_perm("tracet.view_trigger"):
+            raise PermissionDenied("You do not have permission to view this trigger.")
 
         events = trigger.event_set.order_by("-time")
 
@@ -304,6 +335,7 @@ class TriggerView(View):
             request,
             "tracet/trigger/get.html",
             {
+                "user": user,
                 "trigger": trigger,
                 "conditions": trigger.get_conditions(),
                 "events": events,
@@ -312,6 +344,10 @@ class TriggerView(View):
 
     def post(self, request, id):
         trigger = get_object_or_404(models.Trigger, id=id)
+
+        user = get_user(request)
+        if not user.has_perm("tracet.retrigger_trigger", trigger):
+            raise PermissionDenied("You do not have permission to manually retrigger.")
 
         form = forms.EventTrigger(request.POST)
 

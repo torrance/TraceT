@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "nested_admin",
     "tracet.apps.TraceTConfig",
     "django_filters",
+    "rules",
 ]
 
 MIDDLEWARE = [
@@ -120,6 +121,11 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'rules.permissions.ObjectPermissionBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 
 # Internationalization
