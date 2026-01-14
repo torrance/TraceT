@@ -146,7 +146,7 @@ class Telescope(models.Model):
                 status=Observation.Status.API_OK,
                 observatory=self.OBSERVATORY,
                 finish__gte=timezone.now(),
-                istest=False,
+                istest=observation.istest,
             )
             .order_by("-finish")
             .first()
