@@ -42,6 +42,9 @@ class Trigger(models.Model):
         max_length=250,
         help_text="The (x|j)json path to event time. This value is set by the first matching notice and is not overridden by subsequent notices.",
     )
+    expiry = models.FloatField(
+        help_text="Events will expire once this duration has elapsed since first notice. Subsequent notices will not trigger automated observations; manual retriggers will ignore this condition. [minute]"
+    )
 
     objects = Manager()
 

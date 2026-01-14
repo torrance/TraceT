@@ -26,6 +26,11 @@ def resync_events(trigger: models.Trigger):
     for event in events.values():
         event.updatetime()
 
+    # Clear out simulated decisions
+    models.Decision.objects.filter(
+        event__id__in=events.keys(), source=models.Decision.Source.SIMULATED
+    ).delete()
+
 
 @receiver(post_save, sender=models.Trigger)
 def on_trigger_save(sender, instance, created, **kwargs):

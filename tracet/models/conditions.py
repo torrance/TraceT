@@ -59,13 +59,21 @@ class Decision(models.Model):
         if len(notices) == 0:
             factors = [Factor(condition="Event contains no notices", vote=Vote.FAIL)]
         else:
+            conditions = self.event.trigger.get_conditions()
+
+            # Insert expiration condition
+            conditions.insert(
+                0, ExpirationCondition(self.event, self.created)
+            )
+            print("Adding expirationconditin")
+
             # Initialize factors list with oldest notice
             notice = notices.pop(0)
-            factors = [c.vote(notice) for c in self.event.trigger.get_conditions()]
+            factors = [c.vote(notice) for c in conditions]
 
             # Append all additional factors from remaining notices
             for notice in notices:
-                for i, c in enumerate(self.event.trigger.get_conditions()):
+                for i, c in enumerate(conditions):
                     # The following + is doing a lot!
                     #   - Indeterminate votes (== None) will inherit most recent non-null Factor
                     #   - Otherwise, we give precedence to the most recent Factor
@@ -125,6 +133,23 @@ class Factor(models.Model):
         return mark_safe(
             f'<span class="vote {self.get_vote_display().lower()} {"inherited" if self.inherited else ""}" title="{escape(self.condition)}"></span>'
         )
+
+
+class ExpirationCondition:
+    def __init__(self, event, now):
+        self.t0 = event.time
+        self.t1 = now
+        self.expiration = event.trigger.expiry
+
+    def __str__(self):
+        return f"IF {self.t1} - {self.t0} <= {self.expiration} [minute] THEN Pass ELSE Maybe"
+
+    def vote(self, notice: "Notice") -> Factor:
+        # Ignore the notice, since we have all the information we need from our constructor
+        if self.t1 - self.t0 <= datetime.timedelta(minutes=self.expiration):
+            return Factor(condition=str(self), vote=Vote.PASS)
+        else:
+            return Factor(condition=str(self), vote=Vote.MAYBE)
 
 
 class NumericRangeCondition(models.Model):
