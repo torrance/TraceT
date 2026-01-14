@@ -38,7 +38,10 @@ class Observation(models.Model):
         UNKNOWN_FAILURE = "unknown_failure", "An unexpected failure occurred"
 
     decision = models.ForeignKey(
-        "Decision", null=True, on_delete=models.SET_NULL, related_name="observations"
+        "Decision",
+        null=True,
+        related_name="observations",
+        on_delete=models.SET_NULL,
     )
     created = models.DateTimeField(default=timezone.now)
     finish = models.DateTimeField(null=True)
@@ -555,7 +558,7 @@ class ATCA(Telescope):
             scanType="Dwell",
         )
 
-        for atcaband in self.atcaband_set.order_by("band"):
+        for atcaband in self.atcabands.order_by("band"):
             request[atcaband.get_band_display()] = dict(
                 use=True,
                 exposureLength=atcaband.exposure,
@@ -601,7 +604,7 @@ class ATCABand(models.Model):
             )
         ]
 
-    atca = models.ForeignKey(ATCA, on_delete=models.CASCADE)
+    atca = models.ForeignKey(ATCA, related_name="atcabands", on_delete=models.CASCADE)
     band = models.IntegerField(choices=Bands)
     exposure = models.IntegerField(
         help_text="The exposure time of this reciever. Receivers will be continuously cycled up until the full scheduled slot is exhausted. [minute]"

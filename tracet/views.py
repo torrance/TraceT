@@ -313,7 +313,7 @@ class TriggerView(View):
         if not user.has_perm("tracet.view_trigger"):
             raise PermissionDenied("You do not have permission to view this trigger.")
 
-        events = trigger.event_set.order_by("-time")
+        events = trigger.events.order_by("-time")
 
         for event in events:
             event.noticess = list(event.notices.order_by("created"))
@@ -352,7 +352,7 @@ class TriggerView(View):
         form = forms.EventTrigger(request.POST)
 
         if form.is_valid():
-            event = trigger.event_set.get(id=form.cleaned_data["eventid"])
+            event = trigger.events.get(id=form.cleaned_data["eventid"])
             models.Decision.objects.create(
                 event=event, source=models.Decision.Source.MANUAL
             )

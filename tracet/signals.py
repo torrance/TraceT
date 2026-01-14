@@ -20,7 +20,7 @@ def resync_events(trigger: models.Trigger):
             events[event.id] = event
 
     # Delete any events that no longer match the stream/groupby criteria
-    trigger.event_set.exclude(id__in=events.keys()).delete()
+    trigger.events.exclude(id__in=events.keys()).delete()
 
     # Set or update event time
     for event in events.values():
@@ -40,7 +40,7 @@ def on_trigger_save(sender, instance, created, **kwargs):
     resync_events(trigger)
 
     # Set or update (where Trigger.time_path has changed) event time
-    for event in trigger.event_set.all():
+    for event in trigger.events.all():
         event.updatetime()
 
 

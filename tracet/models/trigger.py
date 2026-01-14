@@ -23,11 +23,13 @@ class Trigger(models.Model):
             return (
                 super()
                 .get_queryset()
-                .prefetch_related("numericrangecondition_set", "booleancondition_set")
+                .prefetch_related("numericrangeconditions", "booleanconditions")
             )
 
     name = models.CharField(max_length=250)
-    user = models.ForeignKey(get_user_model(), related_name="triggers", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        get_user_model(), related_name="triggers", on_delete=models.CASCADE
+    )
     created = models.DateField(default=timezone.now)
     priority = models.IntegerField(default=0)
     active = models.BooleanField(
@@ -63,33 +65,28 @@ class Trigger(models.Model):
             return None
 
         # Get or create event and ensure notice is addded
-        event, _ = self.event_set.get_or_create(groupid=groupid)
+        event, _ = self.events.get_or_create(groupid=groupid)
         event.notices.add(notice)
 
         return event
 
     def get_conditions(self):
         return [
-            *self.numericrangecondition_set.all(),
-            *self.booleancondition_set.all(),
-            *self.containscondition_set.all(),
+            *self.numericrangeconditions.all(),
+            *self.booleanconditions.all(),
+            *self.containsconditions.all(),
         ]
 
     def get_telescopes(self):
         return [
             getattr(self, attr)
             for attr in dir(self)
-            if hasattr(self, attr)
-            and issubclass(
-                type(getattr(self, attr)), Telescope
-            )
+            if hasattr(self, attr) and issubclass(type(getattr(self, attr)), Telescope)
         ]
 
     def get_last_attempted_observation(self):
         return (
-            Observation.objects.filter(
-                decision__event__trigger__id=self.id
-            )
+            Observation.objects.filter(decision__event__trigger__id=self.id)
             .order_by("-created")
             .first()
         )
@@ -111,7 +108,9 @@ class Event(models.Model):
 
     objects = Manager()
 
-    trigger = models.ForeignKey("Trigger", on_delete=models.CASCADE)
+    trigger = models.ForeignKey(
+        "Trigger", related_name="events", on_delete=models.CASCADE
+    )
     notices = models.ManyToManyField("Notice")
     groupid = models.CharField(max_length=500)
     time = models.DateTimeField(null=True)
