@@ -19,7 +19,7 @@
                 {% include "tracet/forms/errors.html" with form=form %}
             {% endfor %}
 
-            <table class="trigger-list" data-trigger-active={{ label }}>
+            <table class="trigger-list left-align" data-trigger-active={{ label }}>
                 <thead>
                     <tr><th colspan=7>{{ label | capfirst }}</th></tr>
                     <tr><th class="trigger-handle hidden"></th><th class="field priority">Priority</th><th>Name</th><th>Owner</th><th>Created</th><th>Observatories</th><th>Last attempted observation</th><th class="field active">Active</th></tr>

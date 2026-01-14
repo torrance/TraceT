@@ -455,10 +455,6 @@ form#trigger {
 }
 
 table.trigger-list {
-    th, td {
-        text-align: left;
-    }
-
     td.field.priority input {
         width: 3rem;
     }
