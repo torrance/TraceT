@@ -7,6 +7,10 @@ def is_trigger_owner(user, trigger):
 
 
 rules.add_perm(
+    "tracet.view_trigger",
+    rules.is_group_member("astronomers") | rules.is_group_member("admin"),
+)
+rules.add_perm(
     "tracet.add_trigger",
     rules.is_group_member("admin") | rules.is_group_member("astronomers"),
 )
