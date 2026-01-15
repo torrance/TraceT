@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% load rules %}
+{% load votetotext %}
+
+{% block content %}
+
+{% has_perm "tracet.admin_triggers" user as can_admin_triggers %}
+
+<section>
+
+    <aside>
+        <h2>Summary</h2>
+
+        {% with obs=recentsuccessfulobservation event=recentsuccessfulobservation.decision.event %}
+            <p>
+                There are <strong>{{ activetriggercount | default:"no" }} active triggers</strong> (and 7 inactive).
+                The most recent successful observation was <strong><a href="{{ obs.get_absolute_url }}">{{ obs.created | timesince }} ago</a></strong>
+                triggered by <strong><a href="{{ event.get_absolute_url }}">event {{ event.groupid }}</a></strong> and
+                using the <strong>{{ recentsuccessfulobservation.observatory }}</strong>.
+                {% if kafkaok %}
+                    The server continues to listen for incoming notices, with the most recent being
+                    <strong><a href="{{ mostrecentnotice.get_absolute_url }}">{{ mostrecentnotice.created | timesince }} ago</a></strong>.
+                {% else %}
+                    The server has <strong>stopped</strong> listening to incoming notices.
+                {% endif %}
+            </p>
+        {% endwith %}
+    </aside>
+
+    <aside>
+        <h2>Recent activity</h2>
+
+        <table class="left-align">
+            <thead>
+                <tr>
+                    <td>Time</td>
+                    <td>Trigger</td>
+                    <td>Event ID</td>
+                    <td>Conclusion</td>
+                    <td>Observation</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for decision in decisions %}
+                    <tr>
+                        <td>{{ decision.created | timesince }}</td>
+                        <td><a href="{{ decision.event.trigger.get_absolute_url }}">{{ decision.event.trigger.name }}</a></td>
+                        <td><a href="{{ decision.event.get_absolute_url }}">{{ decision.event.groupid }}</a></td>
+                        <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
+                        <td>
+                            {% for obs in decision.observations.all %}
+                                <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
+                                    {{ obs.observatory }}
+                                </a>
+                            {% empty %}
+                                &mdash;
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p>
+            <a href="{% url 'triggers' %}">
+                View {{ can_admin_triggers | yesno:"& administer,all" }} triggers
+            </a>
+        </p>
+    </aside>
+
+    <aside>
+        <h2>Recent observation attempts</h2>
+
+        <table class="left-align">
+            <thead>
+                <tr><td>Date</td><td>Trigger</td><td>Event ID</td><td>Observatory</td><td>Status</td></tr>
+            </thead>
+            <tbody>
+                {% for observation in observations %}
+                    {% with event=observation.decision.event trigger=observation.decision.event.trigger %}
+                        <tr>
+                            <td>{{ observation.created | timesince }} ago</td>
+                            <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
+                            <td><a href="{{ event.get_absolute_url }}">{{ event.groupid }}</a></td>
+                            <td>{{ observation.observatory }}</td>
+                            <td><span class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}">{{ observation.get_status_display }} {{ observation.istest | yesno:'(test),' }}</span></td>
+                        </tr>
+                    {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p><a href="{% url 'observations' %}">View all observations</a></p>
+    </aside>
+
+    <aside>
+        <h2>Recent notices</h2>
+
+        <table class="left-align">
+            <thead>
+                <tr><td>Received</td><td>Type</td><td>View</td></tr>
+            </thead>
+            <tbody>
+                {% for notice in notices %}
+                    <tr>
+                        <td>{{ notice.created | timesince }} ago</td>
+                        <td><code>{{ notice.stream.name }}</code></td>
+                        <td><a href="{{ notice.get_absolute_url }}">View</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan=5>There are no notices yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p><a href="{% url 'notices' %}">View all notices</a></p>
+    </aside>
+
+    <a onclick="document.querySelectorAll('aside.trigger-details').forEach(el => el.classList.toggle('hidden'));">Show trigger details</a>
+
+    {% for trigger in triggers %}
+        <aside class="trigger-details hidden">
+            <h2>{{ trigger.name }}</h2>
+
+            <table class="left-align">
+                <thead>
+                    <tr>
+                        <td>Created by</td>
+                        <td>Priority</td>
+                        <td>Status</td>
+                        <td>Observatory</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ trigger.user.username }}</td>
+                        <td>{{ trigger.priority }}</td>
+                        <td>{{ trigger.active | yesno:"Active,Inactive" }}</td>
+                        <td>
+                            {% for telescope in trigger.get_telescopes %}
+                                {{ telescope.OBSERVATORY }}
+                            {% empty %}
+                                &mdash;
+                            {% endfor %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p></p>
+
+            <table class="left-align">
+                <thead>
+                    <tr><td colspan=5>Recent activity</td></tr>
+                    <tr>
+                        <td>Date</td>
+                        <td>Event ID</td>
+                        <td>Decision</td>
+                        <td>Observation(s)</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in trigger.get_recent_events %}
+                        {% with decision=event.get_last_interesting_decision %}
+                            <tr>
+                                <td>{{ event.time }}</td>
+                                <td><a href="{{ event.get_absolute_url }}">{{ event.groupid }}</a></td>
+                                <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
+                                <td>
+                                    {% for obs in decision.observations.all %}
+                                        <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
+                                            {{ obs.observatory }}
+                                        </a>
+                                    {% empty %}
+                                        &mdash;
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% empty %}
+                            <tr><td colspan="5">No recorded activity yet</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <p><a href="{{ trigger.get_absolute_url }}">View trigger</a></p>
+        </aside>
+    {% endfor %}
+
+</section>
+
+{% endblock %}

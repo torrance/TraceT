@@ -6,14 +6,21 @@
     <header>
         <nav>
             <div style="display: flex; align-items: center;">
-                <img src="{% static 'logo.png' %}" width=60 alt="TraceT Logo">
+                <a href="{% url 'home' %}">
+                    <img src="{% static 'logo.png' %}" width=60 alt="TraceT Logo">
+                </a>
                 <ul style="padding: 0 2rem;">
-                    <li>TraceT</li>
+                    <li>
+                        Triggers
+                        <ul>
+                            <li><a href="{% url 'triggers' %}">View all triggers</a></li>
+                            <li><a href="{% url 'triggercreate' %}">Create a trigger</a></li>
+                        </ul>
+                    </li>
                     <li>
                         Notices
                         <ul>
                             <li><a href="{% url 'notices' %}">View all notices</a></li>
-                            <li><a href="{% url 'noticecreate' %}">Create test notice</a></li>
                         </ul>
                     </li>
                     <li>
@@ -22,12 +29,7 @@
                             <li><a href="{% url 'observations' %}">View all observations</a></li>
                         </ul>
                     </li>
-                    <li>
-                        Triggers
-                        <ul>
-                            <li><a href="{% url 'triggercreate' %}">Create</a></li>
-                        </ul>
-                    </li>
+
                 </ul>
             </div>
                 <ul>

@@ -1,5 +1,7 @@
+import datetime
 import logging
 
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import EmptyPage, Paginator
 from django.contrib import messages
@@ -20,6 +22,55 @@ from . import models, forms, filters
 
 
 logger = logging.getLogger(__name__)
+
+
+class Home(View):
+    def get(self, request):
+        # Data used in the summary
+        activetriggercount = models.Trigger.objects.filter(active=True).count()
+        inactivetriggercount = models.Trigger.objects.filter(active=False).count()
+        recentsuccessfulobservation = (
+            models.Observation.objects.filter(status=models.Observation.Status.API_OK)
+            .order_by("-created")
+            .first()
+        )
+        kafkaok = datetime.datetime.now(datetime.UTC) - cache.get(
+            "gcn_last_seen", default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC)
+        ) < datetime.timedelta(seconds=15)
+
+        mostrecentnotice = models.Notice.objects.order_by("-created").first()
+
+        # For each trigger, and each of it's respective 10 most recent events,
+        # get the most _interesting_ decision.
+        decisions = []
+        for trigger in models.Trigger.objects.all():
+            for event in trigger.get_recent_events(n=10):
+                if (decision := event.get_last_interesting_decision()) is not None:
+                    decisions.append(decision)
+
+        # Sort these _interesting_ decisions across all by triggers by time
+        # and return the 10 most recent.
+        decisions = sorted(decisions, key=lambda d: d.created, reverse=True)[:10]
+
+        notices = models.Notice.objects.order_by("-created")[:10]
+        observations = models.Observation.objects.order_by("-created")[:10]
+
+        return render(
+            request,
+            "tracet/home.html",
+            {
+                "user": get_user(request),
+                "activetriggercount": activetriggercount,
+                "inactivetriggercount": inactivetriggercount,
+                "recentsuccessfulobservation": recentsuccessfulobservation,
+                "kafkaok": kafkaok,
+                "mostrecentnotice": mostrecentnotice,
+                "notices": notices,
+                "decisions": decisions,
+                "observations": observations,
+                "triggers": models.Trigger.objects.order_by("-priority"),
+            },
+        )
 
 
 class Notice(View):

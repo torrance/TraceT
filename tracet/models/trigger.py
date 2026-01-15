@@ -12,6 +12,7 @@ from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
 
+from tracet.models.conditions import Decision
 from tracet.models.telescopes import Observation, Telescope
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class Trigger(models.Model):
         help_text="The (x|j)json path to event time. This value is set by the first matching notice and is not overridden by subsequent notices.",
     )
     expiry = models.FloatField(
-        help_text="Events will expire once this duration has elapsed since first notice. Subsequent notices will not trigger automated observations; manual retriggers will ignore this condition. [minute]"
+        help_text="Events will expire once this duration has elapsed since first notice. Subsequent notices will not trigger automated observations; manual retriggers will ignore this condition. [minute]",
     )
 
     objects = Manager()
@@ -94,6 +95,9 @@ class Trigger(models.Model):
             .first()
         )
 
+    def get_recent_events(self, n=5):
+        return self.events.order_by("-time")[:5]
+
 
 class Event(models.Model):
     class Manager(models.Manager):
@@ -120,6 +124,9 @@ class Event(models.Model):
 
     def __str__(self):
         return f"Event(Trigger={self.trigger.id} GroupID={self.groupid})"
+
+    def get_absolute_url(self):
+        return self.trigger.get_absolute_url() + "#eventid-" + self.groupid
 
     def querylatest(self, query):
         for notice in self.notices.order_by("-created"):
@@ -150,3 +157,38 @@ class Event(models.Model):
                 )
 
         self.save()
+
+    def get_last_interesting_decision(self) -> Optional["Decision"]:
+        """
+        This method is used in providing front page summary of each event.
+
+        In order of precedence:
+        1. Return the most recent decision that triggered a successful observation
+        2. Return the most recent decision that triggered an unsuccessful observation
+        3. Return most recent decision
+        """
+        observation = (
+            Observation.objects.exclude(decision__source=Decision.Source.SIMULATED)
+            .filter(decision__event__id=self.id, status=Observation.Status.API_OK)
+            .order_by("-created")
+            .first()
+        )
+
+        if observation is not None:
+            return observation.decision
+
+        observation = (
+            Observation.objects.exclude(decision__source=Decision.Source.SIMULATED)
+            .filter(decision__event__id=self.id)
+            .order_by("-created")
+            .first()
+        )
+
+        if observation is not None:
+            return observation.decision
+
+        return (
+            self.decisions.exclude(source=Decision.Source.SIMULATED)
+            .order_by("-created")
+            .first()
+        )

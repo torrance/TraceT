@@ -50,7 +50,7 @@
 
 {% for event in events %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-    <h3 style="display: inline-block;">ID: {{ event.groupid }}</h3>
+    <h3 id="eventid-{{ event.groupid }}" style="display: inline-block;">ID: {{ event.groupid }}</h3>
 
     <p style="display: inline-block; width: unset;">{{ event.time | date:"Y-M-d G:i:s e" }}</p>
 
@@ -71,7 +71,7 @@
     <tbody>
         {% for notice in event.noticess %}
         <tr>
-            <td>{{ notice.created | date:"Y-M-d G:i e" }}</td>
+            <td>{{ notice.created | date:"Y-M-d G:i:s e" }}</td>
             <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
             <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
             <td>{% for factor in notice.decision.factors.all %}
@@ -98,7 +98,7 @@
                 <td>{{ decision.get_source_display }}</td>
                 <td>{% for factor in decision.factors.all %}{{ factor.html }} {% endfor %}</td>
                 <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">{% for obs in decision.observations.all %}
-                    <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">{{ obs.observatory }}</span>
+                    <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">{{ obs.observatory }}</a>
                 {% endfor %}</td>
             </tr>
             {% endfor %}
