@@ -23,7 +23,7 @@ class Trigger(forms.ModelForm):
 
     class Meta:
         model = models.Trigger
-        fields = ["name", "user", "streams", "groupby", "time_path"]
+        fields = ["name", "user", "streams", "groupby", "time_path", "expiry"]
 
 
 class NumericRangeCondition(forms.ModelForm):
