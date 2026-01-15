@@ -15,9 +15,13 @@
         {% with obs=recentsuccessfulobservation event=recentsuccessfulobservation.decision.event %}
             <p>
                 There are <strong>{{ activetriggercount | default:"no" }} active triggers</strong> (and 7 inactive).
-                The most recent successful observation was <strong><a href="{{ obs.get_absolute_url }}">{{ obs.created | timesince }} ago</a></strong>
-                triggered by <strong><a href="{{ event.get_absolute_url }}">event {{ event.groupid }}</a></strong> and
-                using the <strong>{{ recentsuccessfulobservation.observatory }}</strong>.
+                {% if obs is not None %}
+                    The most recent successful observation was <strong><a href="{{ obs.get_absolute_url }}">{{ obs.created | timesince }} ago</a></strong>
+                    triggered by <strong><a href="{{ event.get_absolute_url }}">event {{ event.groupid }}</a></strong> and
+                    using the <strong>{{ obs.observatory }}</strong>.
+                {% else %}
+                    There have not yet been any successful observations.
+                {% endif %}
                 {% if kafkaok %}
                     The server continues to listen for incoming notices, with the most recent being
                     <strong><a href="{{ mostrecentnotice.get_absolute_url }}">{{ mostrecentnotice.created | timesince }} ago</a></strong>.
