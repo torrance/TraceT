@@ -70,7 +70,7 @@ function attachDeleteHandler(formset) {
 }
 
 window.addEventListener("load", function () {
-    this.document.querySelectorAll("form:not([disabled]) table.trigger-list tbody").forEach(el => {
+    this.document.querySelectorAll("form:not([disabled=true]) table.trigger-list tbody").forEach(el => {
         Sortable.create(el, {
             group: "triggerlists",
             forceFallback: true,
@@ -100,7 +100,7 @@ window.addEventListener("load", function () {
         });
     });
 
-    this.document.querySelectorAll("form:not([disabled]) table.trigger-list .trigger-handle").forEach(el => {
+    this.document.querySelectorAll("form:not([disabled=true]) table.trigger-list .trigger-handle").forEach(el => {
         el.classList.remove("hidden");
     });
 
