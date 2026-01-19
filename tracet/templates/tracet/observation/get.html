@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 
+{% load iso8601 %}
+
 {% block title %}Observation {{ observation.id }}{% endblock %}
 
 {% block content %}
 <h1>Observation {{ observation.id }}</h1>
 
 <table class="left-align">
-    <tr><th>Created</th><td>{{ observation.created }}</td></tr>
-    <tr><th>Finish</th><td>{{ observation.finish }}</td></tr>
+    <tr><th>Created</th><td>{{ observation.created | iso8601 }}</td></tr>
+    <tr><th>Finish</th><td>{{ observation.finish | iso8601 }}</td></tr>
     <tr><th>Trigger</th><td><a href="{{ observation.decision.event.trigger.get_absolute_url }}">{{ observation.decision.event.trigger.name }}</a></td></tr>
     <tr><th>Observatory</th><td>{{ observation.observatory }}</td></tr>
     <tr><th>Status</th><td>{{ observation.get_status_display }}</td></tr>

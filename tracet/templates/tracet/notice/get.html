@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 
+{% load iso8601 %}
+
 {% block title %}Notice {{ notice.id }}{% endblock %}
 
 {% block content %}
 <h1>Notice {{ notice.id }}</h1>
 
-<p>{{ notice.created }}</p>
+<p>Received {{ notice.created | iso8601 }}</p>
 
 <p>Stream: <code>{{ notice.stream }}</code></p>
 

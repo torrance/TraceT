@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load rules %}
+{% load iso8601 %}
 
 {% block title %}Trigger {{ trigger.id }}{% endblock %}
 
@@ -52,7 +53,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
     <h3 id="eventid-{{ event.groupid }}" style="display: inline-block;">ID: {{ event.groupid }}</h3>
 
-    <p style="display: inline-block; width: unset;">{{ event.time | date:"Y-M-d G:i:s e" }}</p>
+    <p style="display: inline-block; width: unset;">{{ event.time | iso8601 }}</p>
 
     {% if can_retrigger %}
         <form method="post" style="display: inline-block; min-width: unset; padding: 0; border: none;">
@@ -71,7 +72,7 @@
     <tbody>
         {% for notice in event.noticess %}
         <tr>
-            <td>{{ notice.created | date:"Y-M-d G:i:s e" }}</td>
+            <td>{{ notice.created | iso8601 }}</td>
             <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
             <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
             <td>{% for factor in notice.decision.factors.all %}
@@ -94,7 +95,7 @@
         {% if event.realdecisions %}
             {% for decision in event.realdecisions %}
             <tr>
-                <td>{{ decision.created }}</td>
+                <td>{{ decision.created | iso8601 }}</td>
                 <td>{{ decision.get_source_display }}</td>
                 <td>{% for factor in decision.factors.all %}{{ factor.html }} {% endfor %}</td>
                 <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">{% for obs in decision.observations.all %}

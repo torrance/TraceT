@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load iso8601 %}
+
 {% block title %}Notices{% endblock %}
 
 {% block content %}
@@ -19,7 +21,7 @@
     </thead>
     <tbody>
         {% for notice in notices %}
-        <tr><td>{{ notice.created | date:"Y-M-d G:i e" }}</td><td style="text-align: left;"><code>{{ notice.stream }}</code></td><td><code>{{ notice.stream.get_type_display }}</code></td><td>{% if notice.istest %}Test{% else %}Not a test{% endif %}</td><td><a href="{{ notice.get_absolute_url }}">View</a></td></tr>
+        <tr><td>{{ notice.created | iso8601 }}</td><td style="text-align: left;"><code>{{ notice.stream }}</code></td><td><code>{{ notice.stream.get_type_display }}</code></td><td>{% if notice.istest %}Test{% else %}Not a test{% endif %}</td><td><a href="{{ notice.get_absolute_url }}">View</a></td></tr>
         {% endfor %}
     <tbody></tbody>
 </table>
