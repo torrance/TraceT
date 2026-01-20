@@ -64,20 +64,20 @@ BooleanCondition.Meta.error_messages = {
 }
 
 
-class ContainsCondition(forms.ModelForm):
+class EqualityCondition(forms.ModelForm):
     template_name = "tracet/forms/base.html"
 
     class Meta:
-        model = models.ContainsCondition
+        model = models.EqualityCondition
         fields = ["selector", "vals", "if_true", "if_false"]
         widgets = {"selector": forms.TextInput(attrs={"placeholder": "Selector"})}
 
 
-ContainsCondition.Meta.error_messages = {
+EqualityCondition.Meta.error_messages = {
     field: {
-        "required": f"{getattr(models.ContainsCondition, field).field.verbose_name.capitalize()} is required"
+        "required": f"{getattr(models.EqualityCondition, field).field.verbose_name.capitalize()} is required"
     }
-    for field in ContainsCondition.Meta.fields
+    for field in EqualityCondition.Meta.fields
 }
 
 

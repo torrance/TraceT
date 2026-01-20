@@ -30,8 +30,8 @@ class BooleanCondition(NestedTabularInline):
     can_move = True
 
 
-class ContainsCondition(NestedTabularInline):
-    model = models.ContainsCondition
+class EqualityCondition(NestedTabularInline):
+    model = models.EqualityCondition
     extra = 0
     can_move = True
 
@@ -58,4 +58,4 @@ class Observation(admin.ModelAdmin):
 
 @admin.register(models.Trigger)
 class Trigger(NestedModelAdmin):
-    inlines = [NumericRangeCondition, BooleanCondition, ContainsCondition, MWACorrelator, ATCA]
+    inlines = [NumericRangeCondition, BooleanCondition, EqualityCondition, MWACorrelator, ATCA]

@@ -78,7 +78,7 @@ class Trigger(models.Model):
         return [
             *self.numericrangeconditions.all(),
             *self.booleanconditions.all(),
-            *self.containsconditions.all(),
+            *self.equalityconditions.all(),
         ]
 
     def get_telescopes(self):

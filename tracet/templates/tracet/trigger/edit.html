@@ -45,26 +45,26 @@
                 <template id="booleancondition-template">{% partial booleanformset %}</template>
             {% endwith %}
 
-            {{ containsformset.management_form }}
+            {{ equalityformset.management_form }}
 
-            {% for form in containsformset %}
-                {% partialdef containsformset inline %}
-                    <fieldset class="containscondition deleteable transition-opacity">
-                        <legend>Equals</legend>
+            {% for form in equalityformset %}
+                {% partialdef equalityformset inline %}
+                    <fieldset class="equalitycondition deleteable transition-opacity">
+                        <legend>Equality</legend>
                         {{ form }}
                     </fieldset>
                 {% endpartialdef %}
             {% endfor %}
 
-            {% with form=containsformset.empty_form %}
-                <template id="containscondition-template">{% partial containsformset %}</template>
+            {% with form=equalityformset.empty_form %}
+                <template id="equalitycondition-template">{% partial equalityformset %}</template>
             {% endwith %}
         </div>
 
         <ul>
             <li><a class="fieldset-add" template="numericrangecondition-template" parentnode="conditions" counter="id_{{ rangeformset.prefix }}-TOTAL_FORMS">Add numeric range condition</a></li>
             <li><a class="fieldset-add" template="booleancondition-template" parentnode="conditions" counter="id_{{ booleanformset.prefix }}-TOTAL_FORMS">Add boolean condition</a></li>
-            <li><a class="fieldset-add" template="containscondition-template" parentnode="conditions" counter="id_{{ containsformset.prefix }}-TOTAL_FORMS">Add equality condition</a></li>
+            <li><a class="fieldset-add" template="equalitycondition-template" parentnode="conditions" counter="id_{{ equalityformset.prefix }}-TOTAL_FORMS">Add equality condition</a></li>
         </ul>
     </fieldset>
 

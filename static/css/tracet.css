@@ -426,7 +426,7 @@ form#trigger {
         }
     }
 
-    fieldset.containscondition {
+    fieldset.equalitycondition {
         div.fields {
             display: flex;
             gap: 0rem 1rem;

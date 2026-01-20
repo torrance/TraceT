@@ -206,7 +206,7 @@ class BooleanCondition(models.Model):
         return Factor(condition=str(self), vote=self.if_false)
 
 
-class ContainsCondition(models.Model):
+class EqualityCondition(models.Model):
     selector = models.CharField(max_length=250)
     vals = models.TextField(
         verbose_name="Candidates",
@@ -215,7 +215,7 @@ class ContainsCondition(models.Model):
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
     trigger = models.ForeignKey(
-        "Trigger", related_name="containsconditions", on_delete=models.CASCADE
+        "Trigger", related_name="equalityconditions", on_delete=models.CASCADE
     )
 
     def __str__(self):

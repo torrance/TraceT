@@ -255,10 +255,10 @@ class TriggerBase(View):
                 form=forms.BooleanCondition,
                 extra=0,
             )(post, instance=self.trigger),
-            containsformset=inlineformset_factory(
+            equalityformset=inlineformset_factory(
                 models.Trigger,
-                models.ContainsCondition,
-                form=forms.ContainsCondition,
+                models.EqualityCondition,
+                form=forms.EqualityCondition,
                 extra=0,
             )(post, instance=self.trigger),
             mwaformset=inlineformset_factory(
