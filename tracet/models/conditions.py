@@ -208,7 +208,10 @@ class BooleanCondition(models.Model):
 
 class ContainsCondition(models.Model):
     selector = models.CharField(max_length=250)
-    vals = models.TextField()
+    vals = models.TextField(
+        verbose_name="Candidates",
+        help_text="Enter one more or more candidates (one per line) to test for equality with the selector."
+    )
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
     trigger = models.ForeignKey(

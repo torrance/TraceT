@@ -64,6 +64,23 @@ BooleanCondition.Meta.error_messages = {
 }
 
 
+class ContainsCondition(forms.ModelForm):
+    template_name = "tracet/forms/base.html"
+
+    class Meta:
+        model = models.ContainsCondition
+        fields = ["selector", "vals", "if_true", "if_false"]
+        widgets = {"selector": forms.TextInput(attrs={"placeholder": "Selector"})}
+
+
+ContainsCondition.Meta.error_messages = {
+    field: {
+        "required": f"{getattr(models.ContainsCondition, field).field.verbose_name.capitalize()} is required"
+    }
+    for field in ContainsCondition.Meta.fields
+}
+
+
 class MWACorrelator(forms.ModelForm):
     template_name = "tracet/forms/base.html"
 
@@ -356,6 +373,7 @@ class TriggerAdmin(forms.ModelForm):
     class Meta:
         model = models.Trigger
         fields = ["priority", "active"]
+
 
 class TriggerAdminDisabled(forms.ModelForm):
     priority = forms.IntegerField(disabled=True)

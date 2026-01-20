@@ -410,7 +410,7 @@ form#trigger {
         div.fields {
             display: flex;
             gap: 1rem 1rem;
-            align-items: true;
+            align-items: center;
 
             .field-selector {
                 width: calc(70% - 2rem);
@@ -422,6 +422,31 @@ form#trigger {
                 select {
                     width: 100%;
                 }
+            }
+        }
+    }
+
+    fieldset.containscondition {
+        div.fields {
+            display: flex;
+            gap: 0rem 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+
+            input, select {
+                margin: 0;
+            }
+
+            .field-selector, .field-vals {
+                width: 100%;
+            }
+
+            .field-vals {
+                margin: 0;
+            }
+
+            .field-if_true, .field-if_false {
+                display: inline-block;
             }
         }
     }

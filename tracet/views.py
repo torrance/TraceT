@@ -255,6 +255,12 @@ class TriggerBase(View):
                 form=forms.BooleanCondition,
                 extra=0,
             )(post, instance=self.trigger),
+            containsformset=inlineformset_factory(
+                models.Trigger,
+                models.ContainsCondition,
+                form=forms.ContainsCondition,
+                extra=0,
+            )(post, instance=self.trigger),
             mwaformset=inlineformset_factory(
                 models.Trigger,
                 models.MWACorrelator,
