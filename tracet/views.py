@@ -260,18 +260,21 @@ class TriggerBase(View):
                 models.MWACorrelator,
                 form=forms.MWACorrelator,
                 extra=0,
+                max_num=1,
             )(post, instance=self.trigger),
             mwagwformset=inlineformset_factory(
                 models.Trigger,
                 models.MWAGW,
                 form=forms.MWAGW,
                 extra=0,
+                max_num=1,
             )(post, instance=self.trigger),
             mwavcsformset=inlineformset_factory(
                 models.Trigger,
                 models.MWAVCS,
                 form=forms.MWAVCS,
                 extra=0,
+                max_num=1,
             )(post, instance=self.trigger),
             atcaformset=inlineformset_factory(
                 models.Trigger,
@@ -279,6 +282,7 @@ class TriggerBase(View):
                 form=forms.ATCA,
                 formset=forms.BaseATCAWithBandsFormset,
                 extra=0,
+                max_num=1,
             )(post, instance=self.trigger),
         )
 
@@ -291,6 +295,28 @@ class TriggerBase(View):
         )
 
     def post(self, request, id=None):
+        # Enforce limit of one telescope configuration per trigger
+        telescopeformsets = [
+            self.forms["mwaformset"],
+            self.forms["mwagwformset"],
+            self.forms["mwavcsformset"],
+            self.forms["atcaformset"],
+        ]
+
+        # Validate each fieldset first to ensure `cleaned_data` exists
+        all(map(lambda f: f.is_valid(), telescopeformsets))
+
+        # Count the telescopes
+        # (There must be a better way to do than simply counting all fields where DELETE=False)
+        ntelescopes = sum([
+            (hasattr(f, "cleaned_data") and "DELETE" in f.cleaned_data and f.cleaned_data["DELETE"] is False)
+            for formset in telescopeformsets for f in formset
+        ])
+
+        # ...and attach the error
+        if ntelescopes > 1:
+            self.forms["triggerform"].add_error(None, "A maximum of one telescope may be configured per trigger.")
+
         if all(map(lambda f: f.is_valid(), self.forms.values())):
             # Save the parent trigger first
             self.trigger = self.forms["triggerform"].save()

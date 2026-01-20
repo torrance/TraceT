@@ -323,26 +323,25 @@ form#trigger {
 
         label {
             order: 0;
-            width: 15%;
+            width: 20%;
             min-width: 8rem;
         }
 
-        input {
+        input, select {
             order: 2;
             margin-bottom: 0;
-            max-width: calc(85% - 2rem)
+            max-width: calc(20% - 2rem)
         }
 
         input#id_active {
             margin-right: 1rem;
         }
 
-        /* input[type=text] { max-width: inherit; } */
-
         div.helptext {
             order: 3;
             font-size: 80%;
             margin: 0.4rem 0;
+            width: 100%;
         }
     }
 
@@ -482,33 +481,4 @@ table.trigger-list {
     tr.empty-list:has(+ tr), tr + tr.empty-list {
         display: none;
     }
-}
-
-
-    #id_active {
-position: relative;
-appearance: none; outline: none;
-width: 50px; height: 30px;
-background-color: #ffffff; border: 1px solid #D9DADC;
-border-radius: 50px; box-shadow: inset -20px 0 0 0 #ffffff;
-transition-duration: 200ms;
-}
-
-#id_active:after {
-content: "";
-position: absolute;
-top: 1px; left: 1px;
-width: 26px; height: 26px;
-background-color: transparent;
-border-radius: 50%; box-shadow: 2px 4px 6px rgba(0,0,0,0.2);
-}
-
-#id_active:checked {
-border-color: #4ED164;
-box-shadow: inset 20px 0 0 0 #4ED164;
-}
-
-#id_active:checked:after {
-left: 20px;
-box-shadow: -2px 4px 3px rgba(0,0,0,0.05);
 }

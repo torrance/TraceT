@@ -70,6 +70,74 @@ function attachDeleteHandler(formset) {
 }
 
 window.addEventListener("load", function () {
+    const select = this.document.querySelector("#telescope-selector select");
+    if (!select) { return; }
+
+    select.parentElement.classList.remove("hidden");
+
+    // Select any preloaded fieldset (but ignore fieldsets marked for deletion)
+    this.document.querySelectorAll("#telescopes > fieldset.telescope").forEach(telescope => {
+        const isdeleted = telescope.querySelector(".field-DELETE input");
+        if (isdeleted.checked) {
+            telescope.classList.add("hidden");
+        } else {
+            select.value = telescope.id;
+        }
+
+        isdeleted.parentElement.classList.add("hidden");
+    });
+
+    // Attach listener to select
+    select.addEventListener("change", function () {
+        // First, simply hide all telescope fieldsets
+        document.querySelectorAll("fieldset.telescope").forEach(telescope => {
+            const prefix = telescope.getAttribute("data-formset-prefix");
+            const initial = parseInt(
+                document.getElementById("id_" + prefix + "-INITIAL_FORMS").value
+            );
+
+            if (initial == 0) {
+                // Set TOTAL to 0 _only if_ there was no fieldset on page load
+                document.getElementById("id_" + prefix + "-TOTAL_FORMS").value = 0;
+            }
+
+            // In all cases, hide the fieldset and mark for deletion
+            telescope.classList.add("hidden");
+            telescope.querySelector(".field-DELETE input").checked = true;
+        });
+
+        // Empty selector
+        if (select.value == "") { return; }
+
+        // Show new telescope fieldset
+        let telescope = document.getElementById(select.value);
+        if (telescope) {
+            // The telescope fieldset is merely hidden
+            telescope.classList.remove("hidden");
+            telescope.querySelector(".field-DELETE input").checked = false;
+        } else {
+            // The fieldset needs to be imported into the DOM from its template
+            // The fieldset exists only as a template: import the template into the DOM
+            const template = document.getElementById(select.value + "-template");
+            document.getElementById("telescopes").appendChild(
+                document.importNode(template.content, true)
+            );
+
+            telescope = document.getElementById(select.value);
+
+            telescope.querySelectorAll("a, label, input, select, textarea, template")
+                .forEach(node => {
+                    Array.from(node.attributes).forEach(a => a.value = a.value.replace("__prefix__", 0));
+                });
+        }
+
+        telescope.querySelector(".field-DELETE").classList.add("hidden");
+        const prefix = telescope.getAttribute("data-formset-prefix");
+        document.getElementById("id_" + prefix + "-TOTAL_FORMS").value = 1;
+    });
+})
+
+window.addEventListener("load", function () {
     this.document.querySelectorAll("form:not([disabled=true]) table.trigger-list tbody").forEach(el => {
         Sortable.create(el, {
             group: "triggerlists",
