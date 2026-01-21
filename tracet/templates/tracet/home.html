@@ -53,9 +53,9 @@
                         <td><a href="{{ decision.event.get_absolute_url }}">{{ decision.event.groupid }}</a></td>
                         <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
                         <td>
-                            {% for obs in decision.observations.all %}
-                                <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
-                                    {{ obs.observatory }}
+                            {% for observation in decision.observations.all %}
+                                <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
+                                    {{ observation.observatory }}{% if observation.configuration %} ({{ observation.configuration }}){% endif %}
                                 </a>
                             {% empty %}
                                 &mdash;
@@ -78,7 +78,7 @@
 
         <table class="left-align">
             <thead>
-                <tr><td>Date</td><td>Trigger</td><td>Event ID</td><td>Observatory</td><td>Status</td></tr>
+                <tr><td>Date</td><td>Trigger</td><td>Event ID</td><td>Status</td><td></td></tr>
             </thead>
             <tbody>
                 {% for observation in observations %}
@@ -87,8 +87,12 @@
                             <td>{{ observation.created | timesince }} ago</td>
                             <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
                             <td><a href="{{ event.get_absolute_url }}">{{ event.groupid }}</a></td>
-                            <td>{{ observation.observatory }}</td>
-                            <td><span class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}">{{ observation.get_status_display }} {{ observation.istest | yesno:'(test),' }}</span></td>
+                            <td>
+                                <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
+                                    {{ observation.observatory }}{% if observation.configuration %} ({{ observation.configuration }}){% endif %}
+                                </a>
+                            </td>
+                            <td><a href="{{ observation.get_absolute_url }}">View log</a></td>
                         </tr>
                     {% endwith %}
                 {% endfor %}

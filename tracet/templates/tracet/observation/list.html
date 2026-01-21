@@ -15,21 +15,28 @@
     </div>
 </form>
 
-<table>
+<table class="left-align">
     <thead>
-        <tr><th>Start</th><th>End</th><th>Trigger</th><th>Event ID</th><th>Observatory</th><th>Status</th><th>Log</th></tr>
+        <tr><th>Created</th><th>Trigger</th><th>Event ID</th><th>Observatory</th><th>Config</th></th><th>Status</th><th>Log</th></tr>
     </thead>
     <tbody>
         {% for observation in observations %}
-        <tr>
-            <td>{{ observation.created | iso8601 }}</td>
-            <td style="text-align: left;">{{ observation.finish | iso8601 }}</td>
-            <td><a href="{{ observation.decision.event.trigger.get_absolute_url }}">{{ observation.decision.event.trigger.name }}</a></td>
-            <td>{{ observation.decision.event.groupid }}</td>
-            <td>{{ observation.observatory }}</td>
-            <td>{{ observation.get_status_display }}{% if observation.istest %} (Test){% endif %}</td>
-            <td><a href="{{ observation.get_absolute_url }}">View</a></td>
-        </tr>
+            {% with event=observation.decision.event trigger=observation.decision.event.trigger %}
+                <tr>
+                    <td><code>{{ observation.created | iso8601 }}</code></td>
+                    <td><a href="{{trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
+                    <td>
+                        <a href="{{ event.get_absolute_url }}">{{ event.groupid }}</a></td>
+                    <td>{{ observation.observatory }}</td>
+                    <td>{{ observation.configuration | default:"&mdash;" }}</td>
+                    <td>
+                        <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
+                            {{ observation.get_status_display }}
+                        </a> {{ observation.istest | yesno:"(Test)," }}
+                    </td>
+                    <td><a href="{{ observation.get_absolute_url }}">View</a></td>
+                </tr>
+            {% endwith %}
         {% endfor %}
     <tbody></tbody>
 </table>

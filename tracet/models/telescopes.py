@@ -46,6 +46,7 @@ class Observation(models.Model):
     created = models.DateTimeField(default=timezone.now)
     finish = models.DateTimeField(null=True)
     observatory = models.CharField(choices=Observatory, max_length=500)
+    configuration = models.CharField(blank=True, max_length=500)
     priority = models.IntegerField()
     status = models.CharField(choices=Status)
     istest = models.BooleanField()
@@ -105,6 +106,7 @@ class Telescope(models.Model):
         observation = Observation(
             decision=decision,
             observatory=self.OBSERVATORY,
+            configuration=self.CONFIGURATION,
             priority=decision.event.trigger.priority,
             istest=(not self.trigger.active),
             log="",
@@ -221,6 +223,8 @@ class MWABase(Telescope):
 
 
 class MWACorrelator(MWABase):
+    CONFIGURATION = "Correlator"
+
     ra_path = models.CharField(
         max_length=500,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
@@ -284,6 +288,8 @@ class MWACorrelator(MWABase):
 
 
 class MWAVCS(MWABase):
+    CONFIGURATION = "VCS"
+
     ra_path = models.CharField(
         max_length=500,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
@@ -347,6 +353,8 @@ class MWAVCS(MWABase):
 
 
 class MWAGW(MWABase):
+    CONFIGURATION = "GW"
+
     class SweetSpots:
         MWA = EarthLocation.from_geodetic(
             lat="-26:42:11.95", lon="116:40:14.93", height=377.8
@@ -479,6 +487,7 @@ class MWAGW(MWABase):
 
 class ATCA(Telescope):
     OBSERVATORY = "ATCA"
+    CONFIGURATION = ""
 
     trigger = models.OneToOneField(
         "Trigger", related_name="%(class)s", on_delete=models.CASCADE
