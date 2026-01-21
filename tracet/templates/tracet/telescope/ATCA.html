@@ -1,0 +1,14 @@
+<table class="left-align">
+    <tbody>
+        <tr><th>Observatory</th><td>{{ telescope.OBSERVATORY }}</td></tr>
+        <tr><th>Project ID</th><td>{{ telescope.projectid }}</td></tr>
+        <tr><th>RA</th><td><code>{{ telescope.ra_path }}</code></td></tr>
+        <tr><th>Dec</th><td><code>{{ telescope.dec_path }}</code></td></tr>
+        <tr><th>Maximum lag</th><td>{{ telescope.maximum_lag }} minutes</td></tr>
+        <tr><th>Exposure (min/max)</th><td>{{ telescope.minimum_exposure }}&ndash;{{ telescope.maximum_exposure }} minutes</td></tr>
+
+        {% for band in telescope.atcabands.all %}
+            <tr><th>Band {{ band.get_band_display }}</th><td>{{ band.exposure }} minutes at {{ band.freq1 }} MHz and {{ band.freq2 }} MHz</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

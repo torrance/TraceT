@@ -65,7 +65,6 @@ class Decision(models.Model):
             conditions.insert(
                 0, ExpirationCondition(self.event, self.created)
             )
-            print("Adding expirationconditin")
 
             # Initialize factors list with oldest notice
             notice = notices.pop(0)

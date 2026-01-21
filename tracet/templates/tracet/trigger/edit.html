@@ -175,6 +175,12 @@
                         {% endfor %}
                     </ul>
 
+                    <template id="{{ form.nested.prefix }}-template">
+                        {% with form=form.nested.empty_form %}
+                            {% partial atcaband %}
+                        {% endwith %}
+                    </template>
+
                     <ul>
                         <li><a class="fieldset-add" template="{{ form.nested.prefix }}-template" parentnode="{{form.nested.prefix}}-PARENT" counter="id_{{ form.nested.prefix }}-TOTAL_FORMS">Add a band configuration</a></li>
                     </ul>

@@ -1,0 +1,14 @@
+<table class="left-align">
+    <tbody>
+        <tr><th>Observatory</th><td>{{ telescope.OBSERVATORY }}</td></tr>
+        <tr><th>Configuration</th><td>{{ telescope.CONFIGURATION }}</td></tr>
+        <tr><th>Project ID</th><td>{{ telescope.projectid }}</td></tr>
+        <tr><th>Skymap</th><td><code>{{ telescope.skymap_path }}</code></td></tr>
+        <tr><th>Resolution</th><td>{{ telescope.frequency_resolution }} kHz, {{ telescope.time_resolution }} s</td></tr>
+        <tr><th>Frequency</th><td>{{ telescope.frequency }}</td></tr>
+        <tr><th>Exposure</th><td>{{ telescope.exposure }} s</td></tr>
+        <tr><th>Tileset</th><td>{{ telescope.get_tileset_display }}</td></tr>
+        <tr><th>No. of observations</th><td>{{ telescope.nobs }}</td></tr>
+        <tr><th>Repointing threshold</th><td>{{ telescope.repointing_threshold }}&deg;</td></tr>
+    </tbody>
+</table>

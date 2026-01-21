@@ -35,7 +35,12 @@
                             <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
                             <td>{{ trigger.user.username }}</td>
                             <td>{{ trigger.created | date:"Y-M-d" }}</td>
-                            <td>{{ trigger.get_telescope.OBSERVATORY | default:"&mdash;" }}</td>
+                            <td>
+                                {% with telescope=trigger.get_telescope %}
+                                    {{ telescope.OBSERVATORY | default:"&mdash;" }}
+                                    {% if telescope.CONFIGURATION %}({{ telescope.CONFIGURATION }}){% endif %}
+                                {% endwith %}
+                            </td>
                             {% with obs=trigger.get_last_attempted_observation %}
                                 <td>{% if obs is not None %}{{ obs.created | timesince }} ago {% if obs.istest %}(test){% endif %}{% else %}—{% endif %}</td>
                             {% endwith %}
