@@ -11,6 +11,9 @@ def always(user):
     return False
 
 
+# Module level permission of TraceT required for admin
+rules.add_perm("tracet", rules.is_group_member("admin"))
+
 # Trigger permissions
 rules.add_perm(
     "tracet.view_trigger",
@@ -30,6 +33,12 @@ rules.add_perm(
 rules.add_perm(
     "tracet.retrigger_trigger", rules.is_group_member("admin") | is_trigger_owner
 )
+
+# Allow editing of GCN streams
+rules.add_perm("tracet.view_gcnstream", rules.is_group_member("admin"))
+rules.add_perm("tracet.add_gcnstream", rules.is_group_member("admin"))
+rules.add_perm("tracet.change_gcnstream", rules.is_group_member("admin"))
+rules.add_perm("tracet.delete_gcnstream", rules.is_group_member("admin"))
 
 # User administration permissions
 rules.add_perm("auth", rules.is_group_member("admin"))
