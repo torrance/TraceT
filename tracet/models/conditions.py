@@ -87,7 +87,7 @@ class Decision(models.Model):
             self.conclusion == Vote.PASS
             or (self.source == Decision.Source.MANUAL and self.conclusion == Vote.MAYBE)
         ):
-            for telescope in self.event.trigger.get_telescopes():
+            if telescope := self.event.trigger.get_telescope():
                 telescope.create_observation(self)
 
         return res

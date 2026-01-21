@@ -330,7 +330,7 @@ form#trigger {
         input, select {
             order: 2;
             margin-bottom: 0;
-            max-width: calc(20% - 2rem)
+            max-width: calc(80% - 2rem)
         }
 
         input#id_active {

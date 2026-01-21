@@ -81,12 +81,15 @@ class Trigger(models.Model):
             *self.equalityconditions.all(),
         ]
 
-    def get_telescopes(self):
-        return [
-            getattr(self, attr)
-            for attr in dir(self)
-            if hasattr(self, attr) and issubclass(type(getattr(self, attr)), Telescope)
-        ]
+    def get_telescope(self):
+        try:
+            return [
+                getattr(self, attr)
+                for attr in dir(self)
+                if hasattr(self, attr) and issubclass(type(getattr(self, attr)), Telescope)
+            ][0]
+        except IndexError:
+            return None
 
     def get_last_attempted_observation(self):
         return (

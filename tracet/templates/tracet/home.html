@@ -145,13 +145,7 @@
                         <td>{{ trigger.user.username }}</td>
                         <td>{{ trigger.priority }}</td>
                         <td>{{ trigger.active | yesno:"Active,Inactive" }}</td>
-                        <td>
-                            {% for telescope in trigger.get_telescopes %}
-                                {{ telescope.OBSERVATORY }}
-                            {% empty %}
-                                &mdash;
-                            {% endfor %}
-                        </td>
+                        <td>{{ trigger.get_telescope.OBSERVATORY | default:"&mdash;" }}</td>
                     </tr>
                 </tbody>
             </table>
