@@ -5,7 +5,7 @@ import json
 import logging
 import traceback
 
-from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
+from astropy.coordinates import AltAz, Angle, EarthLocation, ICRS, SkyCoord
 import astropy.time
 from astropy.table import Table
 from astropy.units import hourangle
@@ -47,6 +47,7 @@ class Observation(models.Model):
     finish = models.DateTimeField(null=True)
     observatory = models.CharField(choices=Observatory, max_length=500)
     configuration = models.CharField(blank=True, max_length=500)
+    _pointings = models.JSONField(default=list)
     priority = models.IntegerField()
     status = models.CharField(choices=Status)
     istest = models.BooleanField()
@@ -66,6 +67,14 @@ class Observation(models.Model):
             return self.created <= timezone.now() <= self.finish
         else:
             return False
+
+    @property
+    def pointings(self):
+        return [SkyCoord(c[0], c[1], unit=("deg", "deg")) for c in self._pointings]
+
+    @pointings.setter
+    def pointings(self, coords):
+        self._pointings = [(c.ra.deg, c.dec.deg) for c in coords]
 
 
 class Telescope(models.Model):
@@ -114,7 +123,21 @@ class Telescope(models.Model):
 
         try:
             self.prepare_request(observation)
-            self.check_override(observation)
+
+            current_observation = (
+                Observation.objects.filter(
+                    status=Observation.Status.API_OK,
+                    observatory=self.OBSERVATORY,
+                    finish__gte=timezone.now(),
+                    istest=observation.istest,
+                )
+                .order_by("-finish")
+                .first()
+            )
+
+            if current_observation is not None:
+                self.check_override(current_observation, observation)
+
             self.make_request(observation)
             observation.status = Observation.Status.API_OK
         except Telescope.PreparationException:
@@ -142,25 +165,18 @@ class Telescope(models.Model):
     def make_request(self, observation: Observation):
         raise NotImplementedError()
 
-    def check_override(self, observation: Observation):
-        current_observation = (
-            Observation.objects.filter(
-                status=Observation.Status.API_OK,
-                observatory=self.OBSERVATORY,
-                finish__gte=timezone.now(),
-                istest=observation.istest,
-            )
-            .order_by("-finish")
-            .first()
-        )
-        if (
-            current_observation is not None
-            and observation.priority <= current_observation.priority
-        ):
+    def repoint(
+        self, current_observation: Observation, proposed_observation: Observation
+    ) -> bool:
+        raise NotImplementedError()
+
+    def check_override(self, current_observation: Observation, proposed_observation: Observation):
+        # Default implementation
+        if proposed_observation.priority < current_observation.priority:
             self.log(
-                "Clashing observation",
-                f"Existing observation (id={current_observation.id}) in effect with "
-                f"priority {current_observation.priority} (versus our priority: {observation.priority})",
+                "Preexisting observation",
+                f"Preexisting observation (id={current_observation.id}) in effect with "
+                f"priority {current_observation.priority} (versus our priority: {proposed_observation.priority})",
             )
             raise Telescope.OverrideException()
 
@@ -214,6 +230,32 @@ class MWABase(Telescope):
         help_text="The total number of observations. The total time will equal: (nobs) * (number of frequency ranges) * (exposure time)",
     )
 
+    def check_override(self, current_observation, proposed_observation):
+        super().check_override(current_observation, proposed_observation)
+
+        # Default implementation for all MWA telescopes
+        # Return true if any of the proposed pointings is > repointing_threshold from
+        # an existing pointing.
+        if current_observation.priority == proposed_observation.priority:
+            maxsep = max(
+                min(c0.separation(c1) for c1 in current_observation.pointings).deg
+                for c0 in proposed_observation.pointings
+            )
+
+            if maxsep < self.repointing_threshold:
+                self.log(
+                    "Repointing threshold not met",
+                    f"The proposed pointing is at most {maxsep} degrees apart from the current pointing, "
+                    f"and this does not exceed the repointing threshold ({self.repointing_threshold})."
+                )
+                raise Telescope.OverrideException()
+            else:
+                self.log(
+                    "Repointing threshold exceeded",
+                    f"The proposed pointing is at most {maxsep} degrees apart from the current pointing, "
+                    f"and this exceed the repointing threshold ({self.repointing_threshold})."
+                )
+
 
 class MWACorrelator(MWABase):
     CONFIGURATION = "Correlator"
@@ -235,17 +277,19 @@ class MWACorrelator(MWABase):
             event = observation.decision.event
             ra = event.querylatest(self.ra_path)
             dec = event.querylatest(self.dec_path)
-            ra, dec = float(ra), float(dec)
+            pointing = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
         except Exception as e:
             self.log("An error occurred attempting to parse RA,Dec values:", e)
             raise Telescope.PreparationException() from e
+
+        observation.pointings = [pointing]
 
         self.api_params = dict(
             project_id=self.projectid,
             secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
-            ra=ra,
-            dec=dec,
+            ra=pointing.ra.deg,
+            dec=pointing.dec.deg,
             avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
             tileset=self.tileset,
@@ -300,17 +344,19 @@ class MWAVCS(MWABase):
             event = observation.decision.event
             ra = event.querylatest(self.ra_path)
             dec = event.querylatest(self.dec_path)
-            ra, dec = float(ra), float(dec)
+            pointing = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
         except Exception as e:
             self.log("An error occurred attempting to parse RA,Dec values:", e)
             raise Telescope.PreparationException() from e
+
+        observation.pointings = [pointing]
 
         self.api_params = dict(
             project_id=self.projectid,
             secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
-            ra=ra,
-            dec=dec,
+            ra=pointing.ra.deg,
+            dec=pointing.dec.deg,
             avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
             tileset=self.tileset,
@@ -353,7 +399,7 @@ class MWAGW(MWABase):
             lat="-26:42:11.95", lon="116:40:14.93", height=377.8
         )
 
-        def __init__(self):
+        def __init__(self, time):
             with open(settings.MWA_SWEET_SPOTS_PATH) as f:
                 # SWEET SPOTS file has two line of header (which we skip)
                 # and then 4 "|"-delineated columns:
@@ -373,7 +419,7 @@ class MWAGW(MWABase):
                     ) from e
 
                 self.sweetspots = AltAz(
-                    az=azs, alt=els, location=self.MWA, obstime=astropy.time.Time.now()
+                    az=azs, alt=els, location=self.MWA, obstime=time
                 )
 
         def get_nearest(self, coord: SkyCoord) -> AltAz:
@@ -416,8 +462,8 @@ class MWAGW(MWABase):
 
             # Then: iterate through this list and add a new sweetspot pointing so long as it
             # is separated from any existing pointings by at least (minsep). Stop when we have 4.
-            sweetspots = self.SweetSpots()
-            pointings: list[AltAz] = []
+            sweetspots = self.SweetSpots(astropy.time.Time.now())
+            pointings: list[ICRS] = []
             for coord in coords:
                 sweetspot = sweetspots.get_nearest(coord)
                 separations = [sweetspot.separation(c) for c in pointings]
@@ -425,7 +471,7 @@ class MWAGW(MWABase):
                 if min(separations, default=Angle(180, unit="deg")) > Angle(
                     10, unit="deg"
                 ):
-                    pointings.append(sweetspot)
+                    pointings.append(sweetspot.transform_to(ICRS))
 
                 if len(pointings) >= 4:
                     break
@@ -436,12 +482,14 @@ class MWAGW(MWABase):
             )
             raise Telescope.PreparationException() from e
 
+        observation.pointings = pointings
+
         self.api_params = dict(
             project_id=self.projectid,
             secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
-            az=[p.az.deg for p in pointings],
-            alt=[p.alt.deg for p in pointings],
+            ra=[p.ra.deg for p in pointings],
+            dec=[p.dec.deg for p in pointings],
             avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
             subarrays=["all_ne", "all_nw", "all_se", "all_sw"],
@@ -529,10 +577,12 @@ class ATCA(Telescope):
             event = observation.decision.event
             ra = event.querylatest(self.ra_path)
             dec = event.querylatest(self.dec_path)
-            coord = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
+            pointing = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
         except Exception as e:
             self.log("An error occurred attempting to parse RA,Dec values", e)
             raise Telescope.PreparationException() from e
+
+        observation.pointings = [pointing]
 
         istest = not self.trigger.active
 
@@ -555,8 +605,8 @@ class ATCA(Telescope):
             project=self.projectid,
             minExposureLength=minutes_to_hms(self.minimum_exposure),
             maxExposureLength=minutes_to_hms(self.maximum_exposure),
-            rightAscension=coord.ra.to_string(unit=hourangle, sep=":"),
-            declination=coord.dec.to_string(sep=":"),
+            rightAscension=pointing.ra.to_string(unit=hourangle, sep=":"),
+            declination=pointing.dec.to_string(sep=":"),
             scanType="Dwell",
         )
 
@@ -573,6 +623,14 @@ class ATCA(Telescope):
 
         self.api_params = params
         self.log("API params", json.dumps(self.api_params, indent=4))
+
+    def check_override(self, current_observation, proposed_observation):
+        # ATCA observations cannot at present be cancelled and/or repointed
+        self.log(
+            "ATCA repointing refused",
+            "The ATCA telescope is currently not configured to handle repointings."
+        )
+        raise Telescope.OverrideException()
 
     def make_request(self, observation: Observation):
         try:
