@@ -97,7 +97,6 @@ class MWACorrelator(forms.ModelForm):
             "time_resolution",
             "exposure",
             "nobs",
-            "maximum_window",
             "repointing_threshold",
         ]
 
@@ -126,7 +125,6 @@ class MWAVCS(forms.ModelForm):
             "time_resolution",
             "exposure",
             "nobs",
-            "maximum_window",
             "repointing_threshold",
         ]
 
@@ -154,7 +152,6 @@ class MWAGW(forms.ModelForm):
             "time_resolution",
             "exposure",
             "nobs",
-            "maximum_window",
             "repointing_threshold",
         ]
 

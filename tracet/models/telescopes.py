@@ -213,13 +213,6 @@ class MWABase(Telescope):
         default=15,
         help_text="The total number of observations. The total time will equal: (nobs) * (number of frequency ranges) * (exposure time)",
     )
-    maximum_window = models.IntegerField(
-        help_text=(
-            "The maximum window of time following an event in which observations maybe be "
-            "scheduled. Observations will may be truncated to not exceed this window, and "
-            "events occurring after this window will be ignored. [second]"
-        )
-    )
 
 
 class MWACorrelator(MWABase):
