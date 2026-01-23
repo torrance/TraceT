@@ -7,6 +7,7 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils import timezone
 
+from tracet.models.fields import JXPathField
 from tracet.utils import truthy
 
 
@@ -62,9 +63,7 @@ class Decision(models.Model):
             conditions = self.event.trigger.get_conditions()
 
             # Insert expiration condition
-            conditions.insert(
-                0, ExpirationCondition(self.event, self.created)
-            )
+            conditions.insert(0, ExpirationCondition(self.event, self.created))
 
             # Initialize factors list with oldest notice
             notice = notices.pop(0)
@@ -152,7 +151,7 @@ class ExpirationCondition:
 
 
 class NumericRangeCondition(models.Model):
-    selector = models.CharField(max_length=250)
+    selector = JXPathField(max_length=250)
     val1 = models.FloatField(verbose_name="Lower bound")
     val2 = models.FloatField(verbose_name="Upper bound")
     if_true = models.IntegerField(choices=Vote)
@@ -180,7 +179,7 @@ class NumericRangeCondition(models.Model):
 
 
 class BooleanCondition(models.Model):
-    selector = models.CharField(max_length=250)
+    selector = JXPathField(max_length=250)
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
     trigger = models.ForeignKey(
@@ -206,10 +205,10 @@ class BooleanCondition(models.Model):
 
 
 class EqualityCondition(models.Model):
-    selector = models.CharField(max_length=250)
+    selector = JXPathField(max_length=250)
     vals = models.TextField(
         verbose_name="Candidates",
-        help_text="Enter one more or more candidates (one per line) to test for equality with the selector."
+        help_text="Enter one more or more candidates (one per line) to test for equality with the selector.",
     )
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)

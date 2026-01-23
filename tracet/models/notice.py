@@ -22,7 +22,7 @@ class GCNStream(models.Model):
     type = models.CharField(max_length=500, choices=Format, default="xml")
 
     def __str__(self):
-        return self.name
+        return f"{self.name} [{self.type}]"
 
 
 class Notice(models.Model):

@@ -19,6 +19,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 
+from tracet.models.fields import JXPathField
+
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +172,9 @@ class Telescope(models.Model):
     ) -> bool:
         raise NotImplementedError()
 
-    def check_override(self, current_observation: Observation, proposed_observation: Observation):
+    def check_override(
+        self, current_observation: Observation, proposed_observation: Observation
+    ):
         # Default implementation
         if proposed_observation.priority > current_observation.priority:
             self.log(
@@ -246,25 +250,25 @@ class MWABase(Telescope):
                 self.log(
                     "Repointing threshold not met",
                     f"The proposed pointing is at most {maxsep} degrees apart from the current pointing, "
-                    f"and this does not exceed the repointing threshold ({self.repointing_threshold})."
+                    f"and this does not exceed the repointing threshold ({self.repointing_threshold}).",
                 )
                 raise Telescope.OverrideException()
             else:
                 self.log(
                     "Repointing threshold exceeded",
                     f"The proposed pointing is at most {maxsep} degrees apart from the current pointing, "
-                    f"and this exceed the repointing threshold ({self.repointing_threshold})."
+                    f"and this exceed the repointing threshold ({self.repointing_threshold}).",
                 )
 
 
 class MWACorrelator(MWABase):
     CONFIGURATION = "Correlator"
 
-    ra_path = models.CharField(
+    ra_path = JXPathField(
         max_length=500,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
     )
-    dec_path = models.CharField(
+    dec_path = JXPathField(
         max_length=500,
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
@@ -327,11 +331,11 @@ class MWACorrelator(MWABase):
 class MWAVCS(MWABase):
     CONFIGURATION = "VCS"
 
-    ra_path = models.CharField(
+    ra_path = JXPathField(
         max_length=500,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
     )
-    dec_path = models.CharField(
+    dec_path = JXPathField(
         max_length=500,
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
@@ -426,7 +430,7 @@ class MWAGW(MWABase):
             return self.sweetspots[np.argmin(self.sweetspots.separation(coord))]
 
     # TODO: Remove tileset: we use a fixed set of 4 subarrays
-    skymap_path = models.CharField(
+    skymap_path = JXPathField(
         max_length=500,
         help_text="The (x|j)path to the embedded skymap. This value is set by the most recent matching notice.",
     )
@@ -540,11 +544,11 @@ class ATCA(Telescope):
         help_text="The email address that was supplied in the NAPA proposal."
     )
     authentication_token = models.CharField(max_length=500)
-    ra_path = models.CharField(
+    ra_path = JXPathField(
         max_length=500,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
     )
-    dec_path = models.CharField(
+    dec_path = JXPathField(
         max_length=500,
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
@@ -628,7 +632,7 @@ class ATCA(Telescope):
         # ATCA observations cannot at present be cancelled and/or repointed
         self.log(
             "ATCA repointing refused",
-            "The ATCA telescope is currently not configured to handle repointings."
+            "The ATCA telescope is currently not configured to handle repointings.",
         )
         raise Telescope.OverrideException()
 

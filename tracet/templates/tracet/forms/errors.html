@@ -1,8 +1,18 @@
+{# This template is used in forms where, for layout reasons, we want field errors #}
+{# to appear grouped together for form-level errors. #}
+
 {% if form.errors %}
-{% for field in form %}
-    {% for error in field.errors %}
-    <li>{{ error }}</li>
-    {% endfor %}
-{% endfor %}
-</ul>
+    <ul class="errors">
+        {# Form level errors first #}
+        {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+
+        {# Per field errors #}
+        {% for field in form %}
+            {% for error in field.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
 {% endif %}

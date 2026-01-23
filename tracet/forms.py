@@ -1,11 +1,14 @@
 import json
 
+import jsonpath_rfc9535 as jsonpath
 from lxml import etree
 
 from django import forms
 from django.contrib.auth import get_user_model
+from django.utils.safestring import mark_safe
 
 from . import models
+from . import validators
 
 
 class DateInput(forms.DateInput):
@@ -20,6 +23,40 @@ class Trigger(forms.ModelForm):
     user = forms.ModelChoiceField(
         get_user_model().objects, disabled=True, widget=forms.HiddenInput
     )
+    streams = forms.ModelMultipleChoiceField(
+        models.GCNStream.objects, validators=[validators.unique_stream_format(pk="id")]
+    )
+
+    def clean(self):
+        super().clean()
+
+        notices = models.Notice.objects.filter(
+            stream__id__in=self.cleaned_data["streams"]
+        )
+
+        groupby = self.cleaned_data["groupby"]
+        for notice in notices:
+            if not notice.query(groupby):
+                self.add_error(
+                    "groupby",
+                    mark_safe(
+                        "Event ID path was invalid or empty for one or more archival notice "
+                        f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
+                    ),
+                )
+                break
+
+        timepath = self.cleaned_data["time_path"]
+        for notice in notices:
+            if not notice.query(timepath):
+                self.add_error(
+                    "time_path",
+                    mark_safe(
+                        "Time path was invalid or empty for one or more archival notice "
+                        f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
+                    ),
+                )
+                break
 
     class Meta:
         model = models.Trigger
@@ -356,7 +393,7 @@ class Notice(forms.Form):
             raise forms.ValidationError(
                 "Unable to parse the payload as XML", code="invalid"
             )
-        except json.JSONDecodeError:
+        except jsonpath.JSONDecodeError:
             raise forms.ValidationError(
                 "Unable to parse the payload as JSON", code="invalid"
             )
