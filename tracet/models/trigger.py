@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tracet.models.conditions import Decision
+from tracet.models.fields import JXPathField
 from tracet.models.telescopes import Observation, Telescope
 
 logger = logging.getLogger(__name__)
@@ -38,13 +39,13 @@ class Trigger(models.Model):
         help_text="Inactive triggers will send observation requests to observatories marked as testing only.",
     )
     streams = models.ManyToManyField("GCNStream")
-    eventid_path = models.CharField(
-        max_length=500,
+    eventid_path = JXPathField(
+        gettype=lambda m: m.streams.first().type,
         verbose_name="Event ID Path",
         help_text="The (x|j)json path to event ID. This value is a unique classifier that groups one or more notices that are related to the same underlying event.",
     )
-    time_path = models.CharField(
-        max_length=250,
+    time_path = JXPathField(
+        gettype=lambda m: m.streams.first().type,
         help_text="The (x|j)json path to event time. This value is set by the first matching notice and is not overridden by subsequent notices.",
     )
     expiry = models.FloatField(

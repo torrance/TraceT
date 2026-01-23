@@ -6,15 +6,16 @@ from django.db import models
 
 
 class JXPathField(models.CharField):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, gettype=None, *args, **kwargs):
+        kwargs.pop("max_length", None)  # Required to allow migrations to keep working
+        super().__init__(max_length=500, *args, **kwargs)
+
+        self.gettype = gettype
 
     def validate(self, value, model_instance):
         super().validate(value, model_instance)
 
-        # We assume the streams are an homogenous type
-        format = model_instance.trigger.streams.first().type
-
+        format = self.gettype(model_instance)
         try:
             if format == "xml":
                 etree.XPath(value)

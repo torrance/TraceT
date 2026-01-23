@@ -60,9 +60,6 @@ class Notice(models.Model):
         except IndexError:
             # In the case that no value is found at the path, we return None
             return None
-        except etree.XPathEvalError as e:
-            logger.error(f"Malformed XML query: {path} ({str(e)})")
-            return None
 
     def pretty_payload(self):
         if self.stream.type == "xml":

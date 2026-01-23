@@ -34,29 +34,39 @@ class Trigger(forms.ModelForm):
             stream__id__in=self.cleaned_data["streams"]
         )
 
-        eventid_path = self.cleaned_data["eventid_path"]
-        for notice in notices:
-            if not notice.query(eventid_path):
-                self.add_error(
-                    "eventid_path",
-                    mark_safe(
-                        "Event ID path was invalid or empty for one or more archival notice "
-                        f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
-                    ),
-                )
-                break
+        try:
+            eventid_path = self.cleaned_data["eventid_path"]
+            for notice in notices:
+                if not notice.query(eventid_path):
+                    self.add_error(
+                        "eventid_path",
+                        mark_safe(
+                            "Event ID path was empty for one or more archival notice "
+                            f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
+                        ),
+                    )
+                    break
+        except (etree.XPathEvalError, jsonpath.JSONPathSyntaxError):
+            # This is handled by the field validation
+            pass
 
-        timepath = self.cleaned_data["time_path"]
-        for notice in notices:
-            if not notice.query(timepath):
-                self.add_error(
-                    "time_path",
-                    mark_safe(
-                        "Time path was invalid or empty for one or more archival notice "
-                        f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
-                    ),
-                )
-                break
+        try:
+            timepath = self.cleaned_data["time_path"]
+            for notice in notices:
+                if not notice.query(timepath):
+                    self.add_error(
+                        "time_path",
+                        mark_safe(
+                            "Time path was empty for one or more archival notice "
+                            f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
+                        ),
+                    )
+                    break
+        except (etree.XPathEvalError, jsonpath.JSONPathSyntaxError):
+            # This is handled by the field validation
+            pass
+
+
 
     class Meta:
         model = models.Trigger
