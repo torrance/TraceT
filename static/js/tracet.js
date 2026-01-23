@@ -160,7 +160,7 @@ window.addEventListener("load", function () {
                 trs.forEach((node, i) => {
                     const priority = node.querySelector(".field.priority input[type='number']");
                     if (priority) {
-                        priority.value = trs.length - i;
+                        priority.value = i + 1;
                         priority.dispatchEvent(new Event("change"))
                     }
                 });

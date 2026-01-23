@@ -172,7 +172,7 @@ class Telescope(models.Model):
 
     def check_override(self, current_observation: Observation, proposed_observation: Observation):
         # Default implementation
-        if proposed_observation.priority < current_observation.priority:
+        if proposed_observation.priority > current_observation.priority:
             self.log(
                 "Preexisting observation",
                 f"Preexisting observation (id={current_observation.id}) in effect with "

@@ -76,7 +76,7 @@ def on_notice_save(sender, instance, created, **kwargs):
         return
 
     # For each trigger...
-    for trigger in models.Trigger.objects.order_by("-priority"):
+    for trigger in models.Trigger.objects.order_by("priority"):
         # (Maybe) create a new event
         if event := trigger.get_or_create_event(notice):
             # If this is a real notice, run the trigger for real

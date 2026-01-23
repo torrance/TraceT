@@ -68,7 +68,7 @@ class Home(View):
                 "notices": notices,
                 "decisions": decisions,
                 "observations": observations,
-                "triggers": models.Trigger.objects.order_by("-priority"),
+                "triggers": models.Trigger.objects.order_by("priority"),
             },
         )
 
@@ -182,11 +182,11 @@ class TriggerList(View):
     def get(self, request):
         activetriggers = self.TriggerFormset(
             prefix="activetriggers",
-            queryset=models.Trigger.objects.order_by("-priority").filter(active=True),
+            queryset=models.Trigger.objects.order_by("priority").filter(active=True),
         )
         inactivetriggers = self.TriggerFormset(
             prefix="inactivetriggers",
-            queryset=models.Trigger.objects.order_by("-priority").filter(active=False),
+            queryset=models.Trigger.objects.order_by("priority").filter(active=False),
         )
 
         return render(
