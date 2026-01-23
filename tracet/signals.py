@@ -13,13 +13,13 @@ def resync_events(trigger: models.Trigger):
     # Keep a record of all matching events
     events = dict()
 
-    # Create events that match the stream and groupby criteria
+    # Create events that match the stream and eventid criteria
     for notice in models.Notice.objects.filter(stream__in=trigger.streams.all()):
         event = trigger.get_or_create_event(notice)
         if event:
             events[event.id] = event
 
-    # Delete any events that no longer match the stream/groupby criteria
+    # Delete any events that no longer match the stream/eventid criteria
     trigger.events.exclude(id__in=events.keys()).delete()
 
     # Set or update event time
@@ -41,7 +41,7 @@ def on_trigger_save(sender, instance, created, **kwargs):
     """
     trigger = instance
 
-    # Build the associated list of events, taking into account any changes stream/groupby
+    # Build the associated list of events, taking into account any changes stream/eventid
     resync_events(trigger)
 
     # Set or update (where Trigger.time_path has changed) event time
@@ -58,7 +58,7 @@ def no_trigger_streams_changed(sender, instance, pk_set, action, reverse, **kwar
     trigger = instance
 
     if not reverse and action.startswith("post"):
-        # Build the associated list of events, taking into account any changes stream/groupby
+        # Build the associated list of events, taking into account any changes stream/eventid
         resync_events(trigger)
 
 

@@ -34,11 +34,11 @@ class Trigger(forms.ModelForm):
             stream__id__in=self.cleaned_data["streams"]
         )
 
-        groupby = self.cleaned_data["groupby"]
+        eventid_path = self.cleaned_data["eventid_path"]
         for notice in notices:
-            if not notice.query(groupby):
+            if not notice.query(eventid_path):
                 self.add_error(
-                    "groupby",
+                    "eventid_path",
                     mark_safe(
                         "Event ID path was invalid or empty for one or more archival notice "
                         f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
@@ -60,7 +60,7 @@ class Trigger(forms.ModelForm):
 
     class Meta:
         model = models.Trigger
-        fields = ["name", "user", "streams", "groupby", "time_path", "expiry"]
+        fields = ["name", "user", "streams", "eventid_path", "time_path", "expiry"]
 
 
 class NumericRangeCondition(forms.ModelForm):

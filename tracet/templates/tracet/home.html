@@ -17,7 +17,7 @@
                 There are <strong>{{ activetriggercount | default:"no" }} active triggers</strong> (and 7 inactive).
                 {% if obs is not None %}
                     The most recent successful observation was <strong><a href="{{ obs.get_absolute_url }}">{{ obs.created | timesince }} ago</a></strong>
-                    triggered by <strong><a href="{{ event.get_absolute_url }}">event {{ event.groupid }}</a></strong> and
+                    triggered by <strong><a href="{{ event.get_absolute_url }}">event {{ event.eventid }}</a></strong> and
                     using the <strong>{{ obs.observatory }}</strong>.
                 {% else %}
                     There have not yet been any successful observations.
@@ -50,7 +50,7 @@
                     <tr>
                         <td>{{ decision.created | timesince }}</td>
                         <td><a href="{{ decision.event.trigger.get_absolute_url }}">{{ decision.event.trigger.name }}</a></td>
-                        <td><a href="{{ decision.event.get_absolute_url }}">{{ decision.event.groupid }}</a></td>
+                        <td><a href="{{ decision.event.get_absolute_url }}">{{ decision.event.eventid }}</a></td>
                         <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
                         <td>
                             {% for observation in decision.observations.all %}
@@ -86,7 +86,7 @@
                         <tr>
                             <td>{{ observation.created | timesince }} ago</td>
                             <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
-                            <td><a href="{{ event.get_absolute_url }}">{{ event.groupid }}</a></td>
+                            <td><a href="{{ event.get_absolute_url }}">{{ event.eventid }}</a></td>
                             <td>
                                 <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
                                     {{ observation.observatory }}{% if observation.configuration %} ({{ observation.configuration }}){% endif %}
@@ -167,7 +167,7 @@
                         {% with decision=event.get_last_interesting_decision %}
                             <tr>
                                 <td>{{ event.time }}</td>
-                                <td><a href="{{ event.get_absolute_url }}">{{ event.groupid }}</a></td>
+                                <td><a href="{{ event.get_absolute_url }}">{{ event.eventid }}</a></td>
                                 <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
                                 <td>
                                     {% for obs in decision.observations.all %}

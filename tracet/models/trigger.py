@@ -38,7 +38,11 @@ class Trigger(models.Model):
         help_text="Inactive triggers will send observation requests to observatories marked as testing only.",
     )
     streams = models.ManyToManyField("GCNStream")
-    groupby = models.CharField(max_length=500)
+    eventid_path = models.CharField(
+        max_length=500,
+        verbose_name="Event ID Path",
+        help_text="The (x|j)json path to event ID. This value is a unique classifier that groups one or more notices that are related to the same underlying event.",
+    )
     time_path = models.CharField(
         max_length=250,
         help_text="The (x|j)json path to event time. This value is set by the first matching notice and is not overridden by subsequent notices.",
@@ -61,15 +65,15 @@ class Trigger(models.Model):
             return None
 
         # Extract the group id (or return None if we can't find it)
-        groupid = notice.query(self.groupby)
-        if groupid is None:
+        eventid = notice.query(self.eventid_path)
+        if eventid is None:
             logger.warning(
-                f"Processing Notice (id={notice.id}) for Trigger (id={self.id}) but unable to query groupid"
+                f"Processing Notice (id={notice.id}) for Trigger (id={self.id}) but unable to query eventid"
             )
             return None
 
         # Get or create event and ensure notice is addded
-        event, _ = self.events.get_or_create(groupid=groupid)
+        event, _ = self.events.get_or_create(eventid=eventid)
         event.notices.add(notice)
 
         return event
@@ -86,7 +90,8 @@ class Trigger(models.Model):
             return [
                 getattr(self, attr)
                 for attr in dir(self)
-                if hasattr(self, attr) and issubclass(type(getattr(self, attr)), Telescope)
+                if hasattr(self, attr)
+                and issubclass(type(getattr(self, attr)), Telescope)
             ][0]
         except IndexError:
             return None
@@ -114,7 +119,7 @@ class Event(models.Model):
 
     class Meta:
         ordering = ["-time"]
-        indexes = [models.Index(fields=["-time"]), models.Index(fields=["groupid"])]
+        indexes = [models.Index(fields=["-time"]), models.Index(fields=["eventid"])]
 
     objects = Manager()
 
@@ -122,14 +127,14 @@ class Event(models.Model):
         "Trigger", related_name="events", on_delete=models.CASCADE
     )
     notices = models.ManyToManyField("Notice")
-    groupid = models.CharField(max_length=500)
+    eventid = models.CharField(max_length=500)
     time = models.DateTimeField(null=True)
 
     def __str__(self):
-        return f"Event(Trigger={self.trigger.id} GroupID={self.groupid})"
+        return f"Event(Trigger={self.trigger.id} EventID={self.eventid})"
 
     def get_absolute_url(self):
-        return self.trigger.get_absolute_url() + "#eventid-" + self.groupid
+        return self.trigger.get_absolute_url() + "#eventid-" + self.eventid
 
     def querylatest(self, query):
         for notice in self.notices.order_by("-created"):

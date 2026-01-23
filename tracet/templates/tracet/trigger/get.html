@@ -34,7 +34,7 @@
 <h2>Selectors</h2>
 
 <ul display: table;>
-    <li><strong style="display: inline-block; min-width: 8rem">Group ID path:</strong> <code>{{ trigger.groupby }}</code></li>
+    <li><strong style="display: inline-block; min-width: 8rem">Event ID path:</strong> <code>{{ trigger.eventid_path }}</code></li>
     <li><strong style="display: inline-block; min-width: 8rem">Time path:</strong> <code>{{ trigger.time_path }}</code></li>
 </ul>
 
@@ -56,7 +56,7 @@
 
 {% for event in events %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-    <h3 id="eventid-{{ event.groupid }}" style="display: inline-block;">ID: {{ event.groupid }}</h3>
+    <h3 id="eventid-{{ event.eventid }}" style="display: inline-block;">ID: {{ event.eventid }}</h3>
 
     <p style="display: inline-block; width: unset;">{{ event.time | iso8601 }}</p>
 
