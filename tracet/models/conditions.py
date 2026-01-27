@@ -81,12 +81,12 @@ class Decision(models.Model):
 
         # If this is a real decision and it's a PASS, trigger observations
         # Manually triggered observations will run if only a MAYBE
-        if self.isreal() and (
-            self.conclusion == Vote.PASS
-            or (self.source == Decision.Source.MANUAL and self.conclusion == Vote.MAYBE)
+        if (
+            self.isreal()
+            and self.conclusion == Vote.PASS
+            and (telescope := self.event.trigger.get_telescope())
         ):
-            if telescope := self.event.trigger.get_telescope():
-                telescope.create_observation(self)
+            telescope.create_observation(self)
 
         return res
 
@@ -95,7 +95,7 @@ class Decision(models.Model):
 
     @property
     def conclusion(self) -> int:
-        return min(
+        conclusion = min(
             *[
                 (Vote.FAIL if factor.vote is None else factor.vote)
                 for factor in self.factors.all()
@@ -103,6 +103,12 @@ class Decision(models.Model):
             Vote.PASS,  # default policy: pass
             Vote.PASS,  # repeat twice, in case conditions is empty
         )
+
+        # MAYBE gets promoted to YES if source == MANUAL
+        if conclusion == Vote.MAYBE and self.source == Decision.Source.MANUAL:
+            return Vote.PASS
+        else:
+            return conclusion
 
 
 class Factor(models.Model):

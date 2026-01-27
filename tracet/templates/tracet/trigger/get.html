@@ -3,6 +3,7 @@
 {% load iso8601 %}
 {% load rules %}
 {% load telescopesummary %}
+{% load votetotext %}
 
 {% block title %}Trigger {{ trigger.id }}{% endblock %}
 
@@ -71,7 +72,7 @@
 
 <table>
     <thead>
-        <tr><th colspan=4>Notices</th></tr>
+        <tr><th colspan=5>Notices</th></tr>
         <tr><th>Received</th><th style="text-align: left;">Stream</th><th style="width: 100%"></th><th colspan="{{ event.noticess.0.decision.factors.all | length }}">Current conditions</th></tr>
     </thead>
     <tbody>
@@ -93,8 +94,14 @@
 
 <table>
     <thead>
-        <tr><th colspan=4>Decisions</th></tr>
-        <tr><th style="width: 15%;">Date</th><th>Source</th><th style="width: 60%;">Historic conditions</th><th style="width: 25%;">Observation</th></tr>
+        <tr><th colspan=5>Decisions</th></tr>
+        <tr>
+            <th style="width: 15%;">Date</th>
+            <th>Source</th>
+            <th style="width: 60%;">Historic conditions</th>
+            <th>Conclusion</th>
+            <th style="width: 25%;">Observation</th>
+        </tr>
     </thead>
     <tbody>
         {% if event.realdecisions %}
@@ -102,7 +109,16 @@
             <tr>
                 <td>{{ decision.created | iso8601 }}</td>
                 <td>{{ decision.get_source_display }}</td>
-                <td>{% for factor in decision.factors.all %}{{ factor.html }} {% endfor %}</td>
+                <td>
+                    {% for factor in decision.factors.all %}
+                        {{ factor.html }}
+                    {% empty %}
+                        &mdash;
+                    {% endfor %}
+                </td>
+                <td>
+                    <span class="vote {% votetotext decision.conclusion %}"></span>
+                </td>
                 <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">{% for obs in decision.observations.all %}
                     <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
                         {{ obs.observatory }}{% if obs.configuration %} ({{ obs.configuration }}){% endif %}
