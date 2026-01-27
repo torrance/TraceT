@@ -56,81 +56,83 @@
 <h2>Events</h2>
 
 {% for event in events %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-    <h3 id="eventid-{{ event.eventid }}" style="display: inline-block;">ID: {{ event.eventid }}</h3>
+<div class="trigger-event">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+        <h3 id="eventid-{{ event.eventid }}" style="display: inline-block;">ID: {{ event.eventid }}</h3>
 
-    <p style="display: inline-block; width: unset;">{{ event.time | iso8601 }}</p>
+        <p style="display: inline-block; width: unset;">{{ event.time | iso8601 }}</p>
 
-    {% if can_retrigger %}
-        <form method="post" style="display: inline-block; min-width: unset; padding: 0; border: none;">
-            {% csrf_token %}
-            {{ event.form }}
-            <input style="padding: 0.2rem 0.4rem; margin: 0;" type="submit" value="Retrigger" onclick="return confirm('Are you sure? Retriggering this event group may result in observation requests being sent.');">
-        </form>
-    {% endif %}
-</div>
+        {% if can_retrigger %}
+            <form method="post" style="display: inline-block; min-width: unset; padding: 0; border: none;">
+                {% csrf_token %}
+                {{ event.form }}
+                <input style="padding: 0.2rem 0.4rem; margin: 0;" type="submit" value="Retrigger" onclick="return confirm('Are you sure? Retriggering this event group may result in observation requests being sent.');">
+            </form>
+        {% endif %}
+    </div>
 
-<table>
-    <thead>
-        <tr><th colspan=5>Notices</th></tr>
-        <tr><th>Received</th><th style="text-align: left;">Stream</th><th style="width: 100%"></th><th colspan="{{ event.noticess.0.decision.factors.all | length }}">Current conditions</th></tr>
-    </thead>
-    <tbody>
-        {% for notice in event.noticess %}
-        <tr>
-            <td>{{ notice.created | iso8601 }}</td>
-            <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
-            <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
-            <td>{% for factor in notice.decision.factors.all %}
-                {{ factor.html }}
-            {% endfor %}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-    </tbody>
-</table>
-
-<p></p>
-
-<table>
-    <thead>
-        <tr><th colspan=5>Decisions</th></tr>
-        <tr>
-            <th style="width: 15%;">Date</th>
-            <th>Source</th>
-            <th style="width: 60%;">Historic conditions</th>
-            <th>Conclusion</th>
-            <th style="width: 25%;">Observation</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% if event.realdecisions %}
-            {% for decision in event.realdecisions %}
+    <table>
+        <thead>
+            <tr><th colspan=5>Notices</th></tr>
+            <tr><th>Received</th><th style="text-align: left;">Stream</th><th style="width: 100%"></th><th colspan="{{ event.noticess.0.decision.factors.all | length }}">Current conditions</th></tr>
+        </thead>
+        <tbody>
+            {% for notice in event.noticess %}
             <tr>
-                <td>{{ decision.created | iso8601 }}</td>
-                <td>{{ decision.get_source_display }}</td>
-                <td>
-                    {% for factor in decision.factors.all %}
-                        {{ factor.html }}
-                    {% empty %}
-                        &mdash;
-                    {% endfor %}
-                </td>
-                <td>
-                    <span class="vote {% votetotext decision.conclusion %}"></span>
-                </td>
-                <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">{% for obs in decision.observations.all %}
-                    <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
-                        {{ obs.observatory }}{% if obs.configuration %} ({{ obs.configuration }}){% endif %}
-                    </a>
+                <td>{{ notice.created | iso8601 }}</td>
+                <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
+                <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
+                <td>{% for factor in notice.decision.factors.all %}
+                    {{ factor.html }}
                 {% endfor %}</td>
             </tr>
             {% endfor %}
-        {% else %}
-        <tr><td colspan="4" style="text-align: center;">No recorded decisions</td></tr>
-        {% endif %}
-    </tbody>
-</table>
+        </tbody>
+        </tbody>
+    </table>
+
+    <p></p>
+
+    <table>
+        <thead>
+            <tr><th colspan=5>Decisions</th></tr>
+            <tr>
+                <th style="width: 15%;">Date</th>
+                <th>Source</th>
+                <th style="width: 60%;">Historic conditions</th>
+                <th>Conclusion</th>
+                <th style="width: 25%;">Observation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if event.realdecisions %}
+                {% for decision in event.realdecisions %}
+                <tr>
+                    <td>{{ decision.created | iso8601 }}</td>
+                    <td>{{ decision.get_source_display }}</td>
+                    <td>
+                        {% for factor in decision.factors.all %}
+                            {{ factor.html }}
+                        {% empty %}
+                            &mdash;
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <span class="vote {% votetotext decision.conclusion %}"></span>
+                    </td>
+                    <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">{% for obs in decision.observations.all %}
+                        <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
+                            {{ obs.observatory }}{% if obs.configuration %} ({{ obs.configuration }}){% endif %}
+                        </a>
+                    {% endfor %}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+            <tr><td colspan="4" style="text-align: center;">No recorded decisions</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 {% endfor %}
 
 <footer>
