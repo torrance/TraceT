@@ -429,7 +429,9 @@ class MWAGW(MWABase):
         def get_nearest(self, coord: SkyCoord) -> AltAz:
             return self.sweetspots[np.argmin(self.sweetspots.separation(coord))]
 
-    # TODO: Remove tileset: we use a fixed set of 4 subarrays
+    # MWAGW uses a fixed set of 4 sub arrays and will ignore any tileset setting
+    tileset = None
+
     skymap_path = JXPathField(
         gettype=lambda m: m.trigger.streams.first().type,
         help_text="The (x|j)path to the embedded skymap. This value is set by the most recent matching notice.",

@@ -193,7 +193,6 @@ class MWAGW(forms.ModelForm):
             "projectid",
             "secure_key",
             "skymap_path",
-            "tileset",
             "frequency",
             "frequency_resolution",
             "time_resolution",
