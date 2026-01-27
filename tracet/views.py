@@ -92,12 +92,7 @@ class NoticeList(View):
 
         paginator = Paginator(filter.qs, 100)
         pagenumber = request.GET.get("page", 1)
-
-        try:
-            notices = paginator.page(pagenumber)
-        except EmptyPage:
-            # If out of range, display last page
-            notices = paginator.page(paginator.num_pages)
+        notices = paginator.get_page(pagenumber)
 
         return render(
             request,
@@ -314,14 +309,23 @@ class TriggerBase(View):
 
         # Count the telescopes
         # (There must be a better way to do than simply counting all fields where DELETE=False)
-        ntelescopes = sum([
-            (hasattr(f, "cleaned_data") and "DELETE" in f.cleaned_data and f.cleaned_data["DELETE"] is False)
-            for formset in telescopeformsets for f in formset
-        ])
+        ntelescopes = sum(
+            [
+                (
+                    hasattr(f, "cleaned_data")
+                    and "DELETE" in f.cleaned_data
+                    and f.cleaned_data["DELETE"] is False
+                )
+                for formset in telescopeformsets
+                for f in formset
+            ]
+        )
 
         # ...and attach the error
         if ntelescopes > 1:
-            self.forms["triggerform"].add_error(None, "A maximum of one telescope may be configured per trigger.")
+            self.forms["triggerform"].add_error(
+                None, "A maximum of one telescope may be configured per trigger."
+            )
 
         if all(map(lambda f: f.is_valid(), self.forms.values())):
             # Save the parent trigger first
@@ -396,7 +400,24 @@ class TriggerView(View):
         if not user.has_perm("tracet.view_trigger"):
             raise PermissionDenied("You do not have permission to view this trigger.")
 
-        events = trigger.events.order_by("-time")
+        paginator = Paginator(trigger.events.order_by("-time"), 10)
+
+        # If event_id is passed, set page number so that eventid displays
+        events = None
+        if eventid := request.GET.get("eventid"):
+            events = next(
+                (
+                    page
+                    for page in paginator
+                    for event in page
+                    if event.eventid == eventid
+                ),
+                None,
+            )
+
+        # Event is none if: 1. no eventid is passed or 2. eventid didn't match any event
+        if events is None:
+            events = paginator.get_page(request.GET.get("page", 1))
 
         for event in events:
             event.noticess = list(event.notices.order_by("created"))
@@ -440,6 +461,6 @@ class TriggerView(View):
                 event=event, source=models.Decision.Source.MANUAL
             )
 
-            return HttpResponseRedirect(trigger.get_absolute_url())
+            return HttpResponseRedirect(event.get_absolute_url())
         else:
             return HttpResponse("Bad Request", status=400)

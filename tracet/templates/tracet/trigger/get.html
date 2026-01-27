@@ -116,4 +116,9 @@
     </tbody>
 </table>
 {% endfor %}
+
+<footer>
+{% include "../pagination.html" with page=events %}
+</footer>
+
 {% endblock %}

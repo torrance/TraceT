@@ -135,7 +135,13 @@ class Event(models.Model):
         return f"Event(Trigger={self.trigger.id} EventID={self.eventid})"
 
     def get_absolute_url(self):
-        return self.trigger.get_absolute_url() + "#eventid-" + self.eventid
+        return (
+            self.trigger.get_absolute_url()
+            + "?eventid="
+            + self.eventid
+            + "#eventid-"
+            + self.eventid
+        )
 
     def querylatest(self, query):
         for notice in self.notices.order_by("-created"):
