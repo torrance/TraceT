@@ -110,6 +110,73 @@ class Decision(models.Model):
         else:
             return conclusion
 
+    @classmethod
+    def get_interesting_decisions(self):
+        """
+        This union of queries is getting the most recent *interesting* decisions.
+
+        For each event, the most interesting decision, in order of precendence, is:
+          1. Decision with an associated successful observation
+          2. Decision with an associated unsucessful observation
+          3. Decision with no associated observation (i.e. due to Vote.FAIL)
+
+        The complexity of this comes from the fact that we want only one representative
+        decision per event and these union, group by and subquery expressions are not
+        possible using the Django ORM.
+        """
+
+        return self.objects.raw("""
+            /*
+             * First: get most recent decision per event that triggered a successful observation.
+             */
+            SELECT tracet_decision.* FROM tracet_decision
+            LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
+            WHERE
+                tracet_decision.source <> "simulated" AND
+                tracet_observation.status = "api_ok"
+            GROUP BY tracet_decision.event_id
+            HAVING MAX(tracet_observation.created)
+
+            UNION
+
+            /*
+             * Next: get most recent decision per event that triggered _any_ observation,
+             * but excluding events from the fist query.
+             */
+            SELECT tracet_decision.* FROM tracet_decision
+            LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
+            WHERE
+                tracet_decision.source <> "simulated" AND
+                tracet_decision.event_id NOT IN (
+                    SELECT event_id FROM tracet_decision
+                    LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
+                    WHERE tracet_observation.status = "api_ok"
+                    GROUP BY tracet_decision.event_id
+                )
+            GROUP BY tracet_decision.event_id
+            HAVING MAX(tracet_observation.created)
+
+            UNION
+
+            /*
+             * Finally, get most recent decision per event excluding those of the first
+             * two queries. In practice, this means those decisions with no associated observation.
+             */
+            SELECT tracet_decision.* FROM tracet_decision
+            LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
+            WHERE
+                tracet_decision.source <> "simulated" AND
+                tracet_decision.event_id NOT IN (
+                    SELECT tracet_decision.event_id FROM tracet_decision
+                    INNER JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id  /* INNER JOIN requires an observation to exist */
+                    GROUP BY tracet_decision.event_id
+                )
+            GROUP BY tracet_decision.event_id
+            HAVING MAX(tracet_decision.created)
+
+            ORDER BY tracet_decision.created DESC
+        """)
+
 
 class Factor(models.Model):
     decision = models.ForeignKey(

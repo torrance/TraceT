@@ -37,23 +37,7 @@ class Home(View):
         kafkaok = datetime.datetime.now(datetime.UTC) - cache.get(
             "gcn_last_seen", default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC)
         ) < datetime.timedelta(seconds=15)
-
         mostrecentnotice = models.Notice.objects.order_by("-created").first()
-
-        # For each trigger, and each of it's respective 10 most recent events,
-        # get the most _interesting_ decision.
-        decisions = []
-        for trigger in models.Trigger.objects.all():
-            for event in trigger.get_recent_events(n=10):
-                if (decision := event.get_last_interesting_decision()) is not None:
-                    decisions.append(decision)
-
-        # Sort these _interesting_ decisions across all by triggers by time
-        # and return the 10 most recent.
-        decisions = sorted(decisions, key=lambda d: d.created, reverse=True)[:10]
-
-        notices = models.Notice.objects.order_by("-created")[:10]
-        observations = models.Observation.objects.order_by("-created")[:10]
 
         return render(
             request,
@@ -65,9 +49,9 @@ class Home(View):
                 "recentsuccessfulobservation": recentsuccessfulobservation,
                 "kafkaok": kafkaok,
                 "mostrecentnotice": mostrecentnotice,
-                "notices": notices,
-                "decisions": decisions,
-                "observations": observations,
+                "notices": models.Notice.objects.order_by("-created")[:10],
+                "decisions": models.Decision.get_interesting_decisions()[:15],
+                "observations": models.Observation.objects.order_by("-created")[:10],
                 "triggers": models.Trigger.objects.order_by("priority"),
             },
         )
