@@ -435,6 +435,13 @@ class MWAGW(MWABase):
         help_text="The (x|j)path to either: a URL to a FITS image; or a FITS image embedded directly in the notice using a Base64 encoding. This value is set by the most recent matching notice.",
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Default to dumping the buffer.
+        # This will be set to False if we are overriding a previous MWA GW observation
+        self.dumpbuffer = True
+
     def __str__(self):
         return "MWA GW Configuration"
 
@@ -450,10 +457,16 @@ class MWAGW(MWABase):
         try:
             url, index = skymap.split(",")
             URLValidator()(url)
-            self.log("Skymap looks like a URL; attempting to download", f"skymap={url} index={index}")
+            self.log(
+                "Skymap looks like a URL; attempting to download",
+                f"skymap={url} index={index}",
+            )
             skymap = fits.open(BytesIO(requests.get(url).content))[int(index)].data
         except (ValueError, ValidationError):
-            self.log("Skymap isn't a URL; assuming it is an embedded FITS object encoded as Base64", f"skymap={skymap}")
+            self.log(
+                "Skymap isn't a URL; assuming it is an embedded FITS object encoded as Base64",
+                f"skymap={skymap}",
+            )
             skymap = Table.read(BytesIO(b64decode(skymap)))
         except Exception as e:
             self.log("An error occurred attempting to read the skymap", e)
@@ -510,10 +523,44 @@ class MWAGW(MWABase):
             subarrays=["all_ne", "all_nw", "all_se", "all_sw"],
             pretend=(not self.trigger.active),
         )
-        self.log("API params", json.dumps(self.api_params, indent=4))
+        self.log("VCS API params", json.dumps(self.api_params, indent=4))
+
+        self.bufferdump_params = dict(
+            project_id=self.projectid,
+            secure_key=self.secure_key,
+            pretend=(not self.trigger.active),
+            start_time=0,  # 0 implies earliest available data
+            obstime=10,  # we will immediately trigger a VCS mode
+        )
+        self.log("Bufferdump API params", json.dumps(self.api_params, indent=4))
+
+    def check_override(self, current_observation, proposed_observation):
+        super().check_override(current_observation, proposed_observation)
+
+        if current_observation.configuration == self.CONFIGURATION:
+            self.log(
+                "Setting dumpbuffer=False",
+                "No buffer dump will be attempted due to pre-existing observation",
+            )
+            self.dumpbuffer = False
 
     def make_request(self, observation: Observation):
-        # TODO: Buffer dump if this is the first notice
+        if self.dumpbuffer:
+            try:
+                response = requests.get(
+                    "http://mro.mwa128t.org/trigger/triggerbuffer",
+                    params=self.bufferdump_params,
+                )
+                response.raise_for_status()
+
+                response = json.loads(response.text)
+                self.log("Buffer dump API response", json.dumps(response, indent=4))
+            except requests.RequestException as e:
+                self.log("An error occurred making the HTTP request to the MWA API", e)
+                # Don't throw RequestException: still try to schedule VCS observation
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                self.log("Raw API response", response.text)
+                self.log("The MWA API returned invalid JSON", e)
 
         try:
             response = requests.get(
