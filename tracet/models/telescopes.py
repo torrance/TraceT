@@ -102,7 +102,7 @@ class Telescope(models.Model):
         self._logs = []
         return super().__init__(*args, **kwargs)
 
-    def log(self, title: str, message: str | BaseException):
+    def log(self, title: str, message: str | BaseException | None = None):
         timestamp = datetime.datetime.now(datetime.UTC).isoformat()
         self._logs.append("\n" + timestamp + ": " + title + "\n")
 
@@ -110,7 +110,7 @@ class Telescope(models.Model):
             self._logs.extend(
                 ["> " + line.strip() for line in traceback.format_exception(message)]
             )
-        else:
+        elif message is not None:
             self._logs.extend(["> " + line for line in str(message).splitlines()])
 
     def get_log(self) -> str:
