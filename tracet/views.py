@@ -289,7 +289,7 @@ class TriggerBase(View):
         ]
 
         # Validate each fieldset first to ensure `cleaned_data` exists
-        all(map(lambda f: f.is_valid(), telescopeformsets))
+        all(f.is_valid() for f in  telescopeformsets)
 
         # Count the telescopes
         # (There must be a better way to do than simply counting all fields where DELETE=False)
@@ -311,7 +311,7 @@ class TriggerBase(View):
                 None, "A maximum of one telescope may be configured per trigger."
             )
 
-        if all(map(lambda f: f.is_valid(), self.forms.values())):
+        if all(f.is_valid() for f in self.forms.values()):
             # Save the parent trigger first
             self.trigger = self.forms["triggerform"].save()
             for name, form in self.forms.items():

@@ -40,12 +40,10 @@ class Trigger(models.Model):
     )
     streams = models.ManyToManyField("GCNStream")
     eventid_path = JXPathField(
-        gettype=lambda m: m.streams.first().type,
         verbose_name="Event ID Path",
         help_text="The (x|j)json path to event ID. This value is a unique classifier that groups one or more notices that are related to the same underlying event.",
     )
     time_path = JXPathField(
-        gettype=lambda m: m.streams.first().type,
         help_text="The (x|j)json path to event time. This value is set by the first matching notice and is not overridden by subsequent notices.",
     )
     expiry = models.FloatField(

@@ -265,11 +265,9 @@ class MWACorrelator(MWABase):
     CONFIGURATION = "Correlator"
 
     ra_path = JXPathField(
-        gettype=lambda m: m.trigger.streams.first().type,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
     )
     dec_path = JXPathField(
-        gettype=lambda m: m.trigger.streams.first().type,
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
 
@@ -332,11 +330,9 @@ class MWAVCS(MWABase):
     CONFIGURATION = "VCS"
 
     ra_path = JXPathField(
-        gettype=lambda m: m.trigger.streams.first().type,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
     )
     dec_path = JXPathField(
-        gettype=lambda m: m.trigger.streams.first().type,
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
 
@@ -547,11 +543,9 @@ class ATCA(Telescope):
     )
     authentication_token = models.CharField(max_length=500)
     ra_path = JXPathField(
-        gettype=lambda m: m.trigger.streams.first().type,
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
     )
     dec_path = JXPathField(
-        gettype=lambda m: m.trigger.streams.first().type,
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
     maximum_lag = models.FloatField(

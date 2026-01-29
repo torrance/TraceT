@@ -224,7 +224,7 @@ class ExpirationCondition:
 
 
 class NumericRangeCondition(models.Model):
-    selector = JXPathField(gettype=lambda m: m.trigger.streams.first().type)
+    selector = JXPathField()
     val1 = models.FloatField(verbose_name="Lower bound")
     val2 = models.FloatField(verbose_name="Upper bound")
     if_true = models.IntegerField(choices=Vote)
@@ -252,7 +252,7 @@ class NumericRangeCondition(models.Model):
 
 
 class BooleanCondition(models.Model):
-    selector = JXPathField(gettype=lambda m: m.trigger.streams.first().type)
+    selector = JXPathField()
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
     trigger = models.ForeignKey(
@@ -278,7 +278,7 @@ class BooleanCondition(models.Model):
 
 
 class EqualityCondition(models.Model):
-    selector = JXPathField(gettype=lambda m: m.trigger.streams.first().type)
+    selector = JXPathField()
     vals = models.TextField(
         verbose_name="Candidates",
         help_text="Enter one more or more candidates (one per line) to test for equality with the selector.",
