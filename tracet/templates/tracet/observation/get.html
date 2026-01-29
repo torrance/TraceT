@@ -17,7 +17,7 @@
         <th>Pointing(s)</th>
         <td>
             {% for p in observation.pointings %}
-                ({{ p.ra.deg }}&deg;, {{ p.dec.deg }}&deg;)
+                ({{ p.ra.deg | floatformat:3 }}&deg;, {{ p.dec.deg | floatformat:3 }}&deg;)
             {% empty %}
                 &mdash;
             {% endfor %}

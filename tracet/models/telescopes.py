@@ -6,14 +6,17 @@ import logging
 import traceback
 
 from astropy.coordinates import AltAz, Angle, EarthLocation, ICRS, SkyCoord
-import astropy.time
+from astropy.io import fits
 from astropy.table import Table
+import astropy.time
 from astropy.units import hourangle
 import astropy_healpix as ah
 import numpy as np
 import requests
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -429,19 +432,29 @@ class MWAGW(MWABase):
     tileset = None
 
     skymap_path = JXPathField(
-        gettype=lambda m: m.trigger.streams.first().type,
-        help_text="The (x|j)path to the embedded skymap. This value is set by the most recent matching notice.",
+        help_text="The (x|j)path to either: a URL to a FITS image; or a FITS image embedded directly in the notice using a Base64 encoding. This value is set by the most recent matching notice.",
     )
 
     def __str__(self):
         return "MWA GW Configuration"
 
     def prepare_request(self, observation: Observation):
+        event = observation.decision.event
+        skymap = event.querylatest(self.skymap_path)
+
+        if not skymap:
+            self.log("No skymap was found at the specified path.")
+            raise Telescope.PreparationException()
+
+        # Skymap can be either a Base64 encoding of a fits image or a URL to a fits image
         try:
-            event = observation.decision.event
-            skymapb64 = event.querylatest(self.skymap_path)
-            # TODO: Handle case where skymap is a url to a fits file
-            skymap = Table.read(BytesIO(b64decode(skymapb64)))
+            url, index = skymap.split(",")
+            URLValidator()(url)
+            self.log("Skymap looks like a URL; attempting to download", f"skymap={url} index={index}")
+            skymap = fits.open(BytesIO(requests.get(url).content))[int(index)].data
+        except (ValueError, ValidationError):
+            self.log("Skymap isn't a URL; assuming it is an embedded FITS object encoded as Base64", f"skymap={skymap}")
+            skymap = Table.read(BytesIO(b64decode(skymap)))
         except Exception as e:
             self.log("An error occurred attempting to read the skymap", e)
             raise Telescope.PreparationException() from e
@@ -473,7 +486,7 @@ class MWAGW(MWABase):
                 if min(separations, default=Angle(180, unit="deg")) > Angle(
                     10, unit="deg"
                 ):
-                    pointings.append(sweetspot.transform_to(ICRS))
+                    pointings.append(sweetspot.transform_to(ICRS()))
 
                 if len(pointings) >= 4:
                     break
