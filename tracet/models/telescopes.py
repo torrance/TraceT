@@ -491,7 +491,7 @@ class MWAGW(MWABase):
             # Then: iterate through this list and add a new sweetspot pointing so long as it
             # is separated from any existing pointings by at least (minsep). Stop when we have 4.
             sweetspots = self.SweetSpots(astropy.time.Time.now())
-            pointings: list[ICRS] = []
+            pointings: list[AltAz] = []
             for coord in coords:
                 sweetspot = sweetspots.get_nearest(coord)
                 separations = [sweetspot.separation(c) for c in pointings]
@@ -499,7 +499,7 @@ class MWAGW(MWABase):
                 if min(separations, default=Angle(180, unit="deg")) > Angle(
                     10, unit="deg"
                 ):
-                    pointings.append(sweetspot.transform_to(ICRS()))
+                    pointings.append(sweetspot)
 
                 if len(pointings) >= 4:
                     break
@@ -509,6 +509,14 @@ class MWAGW(MWABase):
                 e,
             )
             raise Telescope.PreparationException() from e
+
+        self.log(
+            "Determined 4 MWA sweetspots to observe",
+            ", ".join(f"(Alt={p.alt.deg}° Az={p.az.deg}°)" for p in pointings),
+        )
+
+        # Convert from local to sky coordinates
+        pointings = [p.transform_to(ICRS()) for p in pointings]
 
         observation.pointings = pointings
 
@@ -532,7 +540,7 @@ class MWAGW(MWABase):
             start_time=0,  # 0 implies earliest available data
             obstime=10,  # we will immediately trigger a VCS mode
         )
-        self.log("Bufferdump API params", json.dumps(self.api_params, indent=4))
+        self.log("Bufferdump API params", json.dumps(self.bufferdump_params, indent=4))
 
     def check_override(self, current_observation, proposed_observation):
         super().check_override(current_observation, proposed_observation)
