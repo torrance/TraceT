@@ -1,0 +1,8 @@
+203.101.225.0 {
+	handle_path /static/* {
+		root * /tracet/static/
+		file_server
+	}
+
+	reverse_proxy gunicorn:8000
+}

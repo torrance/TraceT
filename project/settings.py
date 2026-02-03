@@ -144,7 +144,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "tracet/static"]
+STATIC_ROOT = BASE_DIR / "static"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -158,3 +159,33 @@ LOGOUT_REDIRECT_URL = "login"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 MWA_SWEET_SPOTS_PATH = BASE_DIR / "tracet/data/MWASweetSpots.txt"
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs/log.log",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "DEBUG",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+        },
+        "tracet.management.commands.listengcn": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        }
+    }
+}

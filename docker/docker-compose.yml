@@ -1,0 +1,47 @@
+services:
+  gunicorn:
+    profiles: ["prod"]
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: 'bash -c "cd /tracet && uv run ./manage.py collectstatic --clear --no-input && uv run gunicorn --bind 0.0.0.0:8000 project.wsgi"'
+    volumes:
+      - ..:/tracet
+      - /tracet/.venv
+
+  runserver:
+    profiles: ["dev"]
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: 'bash -c "cd /tracet && uv run ./manage.py runserver 0.0.0.0:8000"'
+    ports:
+      - "8123:8000"
+    volumes:
+      - ..:/tracet
+      - /tracet/.venv
+
+  gcnlisten:
+    profiles: ["prod", "dev"]
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: 'sh -c "cd /tracet && uv run ./manage.py listengcn"'
+    volumes:
+      - ..:/tracet
+      - /tracet/.venv
+
+  caddy:
+    profiles: ["prod"]
+    restart: unless-stopped
+    depends_on: [gunicorn]
+    image: caddy:latest
+    ports:
+      - "8005:80"
+      # - "443:443"
+    volumes:
+      - ./caddy:/etc/caddy
+      - ../static:/tracet/static
