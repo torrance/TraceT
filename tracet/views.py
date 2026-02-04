@@ -85,29 +85,6 @@ class NoticeList(View):
         )
 
 
-class NoticeCreate(View):
-    def get(self, request):
-        form = forms.Notice()
-        return render(request, "tracet/notice/create.html", {"form": form})
-
-    def post(self, request):
-        form = forms.Notice(request.POST)
-
-        if form.is_valid():
-            n = models.Notice(
-                stream=form.cleaned_data["stream"],
-                created=form.cleaned_data["created"],
-                payload=form.cleaned_data["payload"].encode(),
-                istest=True,
-            )
-            n.full_clean()
-            n.save()
-
-            return HttpResponseRedirect(n.get_absolute_url())
-        else:
-            return render(request, "tracet/notice/create.html", {"form": form})
-
-
 class ObservationList(View):
     def get(self, request):
         filter = filters.Observation(

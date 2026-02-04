@@ -49,13 +49,9 @@ class Decision(models.Model):
         self.factors.all().delete()
 
         # Attach all factors
-        notices = self.event.notices.filter(created__lte=self.created).order_by(
-            "created"
+        notices = list(
+            self.event.notices.filter(created__lte=self.created).order_by("created")
         )
-        if self.isreal():
-            notices.filter(istest=False)
-
-        notices = list(notices)
 
         if len(notices) == 0:
             factors = [Factor(condition="Event contains no notices", vote=Vote.FAIL)]

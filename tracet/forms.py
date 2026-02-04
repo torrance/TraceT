@@ -370,44 +370,6 @@ class BaseATCAWithBandsFormset(forms.BaseInlineFormSet):
         return form.instance and not form.instance._state.adding
 
 
-class Notice(forms.Form):
-    stream = forms.ModelChoiceField(
-        queryset=models.GCNStream.objects.order_by("name"),
-        required=True,
-        help_text="Select the matching stream of the notice.",
-    )
-    created = forms.DateTimeField(
-        required=True,
-        widget=DateTimeInput,
-        help_text="Set the created date and time to match the true time of the notice.",
-    )
-    payload = forms.CharField(
-        widget=forms.Textarea,
-        help_text=(
-            "Paste in the full XML or JSON string, depending on the file type of the chosen stream."
-        ),
-        required=True,
-    )
-
-    def clean(self):
-        super().clean()
-
-        n = models.Notice(
-            stream=self.cleaned_data["stream"],
-            payload=self.cleaned_data["payload"].encode(),
-        )
-        try:
-            n.query(".")
-        except etree.XMLSyntaxError:
-            raise forms.ValidationError(
-                "Unable to parse the payload as XML", code="invalid"
-            )
-        except jsonpath.JSONDecodeError:
-            raise forms.ValidationError(
-                "Unable to parse the payload as JSON", code="invalid"
-            )
-
-
 class EventTrigger(forms.Form):
     eventid = forms.IntegerField(widget=forms.HiddenInput)
 

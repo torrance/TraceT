@@ -31,7 +31,6 @@ class Notice(models.Model):
     )
     created = models.DateTimeField(default=timezone.now)
     payload = models.BinaryField()
-    istest = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created"]

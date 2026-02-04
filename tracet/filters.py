@@ -53,11 +53,10 @@ class DateRangeWidget(django_filters.widgets.SuffixedMultiWidget):
 class Notice(django_filters.FilterSet):
     stream = django_filters.ModelChoiceFilter(queryset=models.GCNStream.objects.all())
     created = django_filters.DateFromToRangeFilter(widget=DateRangeWidget())
-    istest = django_filters.BooleanFilter(label="Is Test", widget=BooleanWidget)
 
     class Meta:
         model = models.Notice
-        fields = ["stream", "stream__type", "created", "istest"]
+        fields = ["stream", "stream__type", "created"]
 
 
 class Observation(django_filters.FilterSet):

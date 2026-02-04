@@ -17,11 +17,16 @@
 
 <table>
     <thead>
-        <tr><th>Date</th><th>Stream</th><th>Format</th><th>Test</th><th></th></tr>
+        <tr><th>Date</th><th>Stream</th><th>Format</th><th></th></tr>
     </thead>
     <tbody>
         {% for notice in notices %}
-        <tr><td>{{ notice.created | iso8601 }}</td><td style="text-align: left;"><code>{{ notice.stream }}</code></td><td><code>{{ notice.stream.get_type_display }}</code></td><td>{% if notice.istest %}Test{% else %}Not a test{% endif %}</td><td><a href="{{ notice.get_absolute_url }}">View</a></td></tr>
+            <tr>
+                <td>{{ notice.created | iso8601 }}</td>
+                <td style="text-align: left;"><code>{{ notice.stream }}</code></td>
+                <td><code>{{ notice.stream.get_type_display }}</code></td>
+                <td><a href="{{ notice.get_absolute_url }}">View</a></td>
+            </tr>
         {% endfor %}
     <tbody></tbody>
 </table>

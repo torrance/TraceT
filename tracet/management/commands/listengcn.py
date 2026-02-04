@@ -48,7 +48,7 @@ class Command(BaseCommand):
                     else:
                         try:
                             stream = GCNStream.objects.get(name=message.topic())
-                            notice = Notice(stream=stream, payload=message.value(), istest=False)
+                            notice = Notice(stream=stream, payload=message.value())
                             notice.full_clean()
                             notice.save()
                         except Exception as e:

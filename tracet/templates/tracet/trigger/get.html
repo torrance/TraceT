@@ -80,7 +80,7 @@
             {% for notice in event.noticess %}
             <tr>
                 <td>{{ notice.created | iso8601 }}</td>
-                <td style="text-align: left"><code>{{ notice.stream.name }}</code> {% if notice.istest %}(Test){% endif %}</td>
+                <td style="text-align: left"><code>{{ notice.stream.name }}</code></td>
                 <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
                 <td>{% for factor in notice.decision.factors.all %}
                     {{ factor.html }}

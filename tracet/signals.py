@@ -79,11 +79,9 @@ def on_notice_save(sender, instance, created, **kwargs):
     for trigger in models.Trigger.objects.order_by("priority"):
         # (Maybe) create a new event
         if event := trigger.get_or_create_event(notice):
-            # If this is a real notice, run the trigger for real
-            if not notice.istest:
-                models.Decision.objects.create(
-                    event=event, source=models.Decision.Source.NOTICE
-                )
+            models.Decision.objects.create(
+                event=event, source=models.Decision.Source.NOTICE
+            )
 
 
 @receiver(post_save, sender=models.NumericRangeCondition)
