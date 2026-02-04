@@ -46,7 +46,7 @@ class Observation(models.Model):
         "Decision",
         null=True,
         related_name="observations",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
     )
     created = models.DateTimeField(default=timezone.now)
     finish = models.DateTimeField(null=True)
