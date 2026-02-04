@@ -42,5 +42,6 @@ services:
       - "8000:80"
       - "8443:443"
     volumes:
-      - ./caddy:/etc/caddy
+      - ./caddy/config:/etc/caddy
+      - ./caddy/data:/data
       - ../static:/tracet/static
