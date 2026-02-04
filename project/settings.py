@@ -27,6 +27,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = True if os.getenv("DJANGO_DEBUG") else False
 
 ALLOWED_HOSTS = [
+    "localhost",
     "203.101.225.0",
     "tracet2.duckdns.org",
 ]
