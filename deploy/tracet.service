@@ -10,7 +10,7 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/debian/TraceT/docker
+WorkingDirectory=/home/debian/TraceT/deploy
 ExecStartPre=/usr/bin/podman compose --profile prod build
 ExecStartPre=/usr/bin/podman compose --profile prod exec gunicorn bash -c "uv run ./manage.py migrate --noinput"
 ExecStartPre=/usr/bin/podman compose --profile prod exec gunicorn bash -c "uv run ./manage.py collectstatic --clear --noinput"
