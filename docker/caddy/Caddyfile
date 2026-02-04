@@ -1,4 +1,4 @@
-203.101.225.0 {
+tracet2.duckdns.org {
 	handle_path /static/* {
 		root * /tracet/static/
 		file_server

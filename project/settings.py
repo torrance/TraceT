@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure--srv-ndc76+(@r&(enik*12)+lw_m!u8*bpo6r1lh(kvoccj$-"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True if os.getenv("DJANGO_DEBUG") else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "203.101.225.0",
+    "tracet2.duckdns.org",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://tracet2.duckdns.org",
+]
 
 
 # Application definition
@@ -172,6 +180,10 @@ LOGGING = {
             "class": "logging.FileHandler",
             "filename": BASE_DIR / "logs/log.log",
         },
+        "gcnlisten": {
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs/gcnlisten.log"
+        },
     },
     "root": {
         "handlers": ["console", "file"],
@@ -183,7 +195,7 @@ LOGGING = {
             "level": "INFO",
         },
         "tracet.management.commands.listengcn": {
-            "handlers": ["console", "file"],
+            "handlers": ["console", "gcnlisten"],
             "level": "INFO",
             "propagate": False,
         }

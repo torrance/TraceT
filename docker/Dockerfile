@@ -1,13 +1,10 @@
-FROM debian:trixie
+FROM docker.io/library/debian:trixie
 
 RUN apt update
 
 RUN apt install -y --no-install-recommends \
   ca-certificates \
-  curl \
-  net-tools \
-  netcat-openbsd \
-  git
+  curl
 
 # Install UV Python package manager
 ADD https://astral.sh/uv/0.9.28/install.sh /uv-installer.sh
@@ -24,5 +21,3 @@ COPY .python-version /tracet
 WORKDIR /tracet
 RUN ls -al .
 RUN uv sync --locked
-
-EXPOSE 8000
