@@ -11,6 +11,7 @@
     <tr><th>Created</th><td>{{ observation.created | iso8601 }}</td></tr>
     <tr><th>Finish</th><td>{{ observation.finish | iso8601 }}</td></tr>
     <tr><th>Trigger</th><td><a href="{{ observation.decision.event.trigger.get_absolute_url }}">{{ observation.decision.event.trigger.name }}</a></td></tr>
+    <tr><th>Event</th><td><a href="{{ observation.decision.event.get_absolute_url }}">{{ observation.decision.event.eventid }}</a></td></tr>
     <tr><th>Observatory</th><td>{{ observation.observatory }}</td></tr>
     <tr><th>Configuration</th><td>{{ observation.configuration | default:"&mdash;" }}</td></tr>
     <tr>
