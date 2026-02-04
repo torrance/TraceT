@@ -1,7 +1,6 @@
 services:
   gunicorn:
     profiles: ["prod"]
-    restart: unless-stopped
     build:
       context: ..
       dockerfile: deploy/Dockerfile
@@ -13,7 +12,6 @@ services:
 
   runserver:
     profiles: ["dev"]
-    restart: unless-stopped
     build:
       context: ..
       dockerfile: deploy/Dockerfile
@@ -29,7 +27,6 @@ services:
 
   gcnlisten:
     profiles: ["prod", "dev"]
-    restart: unless-stopped
     build:
       context: ..
       dockerfile: deploy/Dockerfile
@@ -40,8 +37,6 @@ services:
 
   caddy:
     profiles: ["prod"]
-    restart: unless-stopped
-    depends_on: [gunicorn]
     image: docker.io/library/caddy:latest
     ports:
       - "8000:80"

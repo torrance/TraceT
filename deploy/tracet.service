@@ -10,13 +10,22 @@ After=network.target
 
 [Service]
 Type=simple
+
 WorkingDirectory=/home/debian/TraceT/deploy
+
 ExecStartPre=/usr/bin/podman compose --profile prod build
 ExecStartPre=/usr/bin/podman compose --profile prod run gunicorn bash -c "uv run ./manage.py migrate --noinput"
 ExecStartPre=/usr/bin/podman compose --profile prod run gunicorn bash -c "uv run ./manage.py collectstatic --clear --noinput"
-ExecStart=/usr/bin/podman compose --profile prod up
+
+ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans --abort-on-container-exit
+
+# Force cleanup of containers if they didn't exit cleanly
+ExecStopPost=/usr/bin/podman compose --profile prod stop
+
+TimeOutSec=15
 Restart=on-failure
 RestartSec=5
+
 StandardOutput=file:%h/tracet-systemd.log
 
 [Install]
