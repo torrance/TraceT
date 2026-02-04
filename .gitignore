@@ -15,3 +15,4 @@ wheels/
 /logs
 /static
 /deploy/secretkey.env
+/deploy/caddy/data
