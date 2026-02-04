@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    command: 'bash -c "cd /tracet && uv run ./manage.py collectstatic --clear --no-input && uv run gunicorn --bind 0.0.0.0:8000 project.wsgi"'
+    command: 'bash -c "uv run gunicorn --bind 0.0.0.0:8000 project.wsgi"'
     env_file: "secretkey.env"
     volumes:
       - ..:/tracet
@@ -17,7 +17,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    command: 'bash -c "cd /tracet && uv run ./manage.py runserver 0.0.0.0:8000"'
+    command: 'bash -c "uv run ./manage.py runserver 0.0.0.0:8000"'
     environment:
       - DJANGO_DEBUG=true
     env_file: "secretkey.env"
@@ -33,7 +33,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    command: 'sh -c "cd /tracet && uv run ./manage.py listengcn"'
+    command: 'sh -c "uv run ./manage.py listengcn"'
     volumes:
       - ..:/tracet
       - /tracet/.venv
