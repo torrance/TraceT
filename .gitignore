@@ -14,4 +14,4 @@ wheels/
 /*.sqlite3-wal
 /logs
 /static
-/docker/secretkey.env
+/deploy/secretkey.env
