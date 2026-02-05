@@ -1,0 +1,17 @@
+[Unit]
+Description=TraceT (Caddy)
+After=tracet.service
+WantedBy=tracet.service
+PartOf=tracet.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/debian/TraceT/deploy
+ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans caddy
+ExecStopPost=/usr/bin/podman compose --profile prod stop caddy
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:%h/tracet-systemd/caddy.log
+
+[Install]
+WantedBy=default.target

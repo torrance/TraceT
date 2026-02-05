@@ -1,0 +1,17 @@
+[Unit]
+Description=TraceT (Gunicorn)
+After=tracet.service
+WantedBy=tracet.service
+PartOf=tracet.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/debian/TraceT/deploy
+ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans gunicorn
+ExecStopPost=/usr/bin/podman compose --profile prod stop gunicorn
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:%h/tracet-systemd/gunicorn.log
+
+[Install]
+WantedBy=default.target
