@@ -179,6 +179,12 @@ MWA_SWEET_SPOTS_PATH = BASE_DIR / "tracet/data/MWASweetSpots.txt"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
@@ -186,10 +192,12 @@ LOGGING = {
         "file": {
             "class": "logging.FileHandler",
             "filename": BASE_DIR / "logs/log.log",
+            "formatter": "verbose",
         },
         "gcnlisten": {
             "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs/gcnlisten.log"
+            "filename": BASE_DIR / "logs/gcnlisten.log",
+            "formatter": "verbose",
         },
     },
     "root": {
