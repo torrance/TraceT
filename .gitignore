@@ -14,5 +14,5 @@ wheels/
 /*.sqlite3-wal
 /logs
 /static
-/deploy/secretkey.env
+/deploy/secrets.env
 /deploy/caddy/data
