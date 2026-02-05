@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+{% load iso8601 %}
 {% load rules %}
 {% load votetotext %}
 
@@ -41,27 +42,35 @@
                     <td>Time</td>
                     <td>Trigger</td>
                     <td>Event ID</td>
+                    <td>Event time</td>
                     <td>Conclusion</td>
                     <td>Observation</td>
                 </tr>
             </thead>
             <tbody>
                 {% for decision in decisions %}
-                    <tr>
-                        <td>{{ decision.created | timesince }}</td>
-                        <td><a href="{{ decision.event.trigger.get_absolute_url }}">{{ decision.event.trigger.name }}</a></td>
-                        <td><a href="{{ decision.event.get_absolute_url }}">{{ decision.event.eventid }}</a></td>
-                        <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
-                        <td>
-                            {% for observation in decision.observations.all %}
-                                <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
-                                    {{ observation.observatory }}{% if observation.configuration %} ({{ observation.configuration }}){% endif %}
-                                </a>
-                            {% empty %}
-                                &mdash;
-                            {% endfor %}
-                        </td>
-                    </tr>
+                    {% with event=decision.event trigger=decision.event.trigger %}
+                        <tr>
+                            <td>
+                                <time datetime="{{ decision.created | iso8601 }}" title="{{ decision.created | iso8601 }}">
+                                    {{ decision.created | timesince }} ago
+                                </time>
+                            </td>
+                            <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
+                            <td><a href="{{ event.get_absolute_url }}">{{ event.eventid }}</a></td>
+                            <td>{{ event.time | iso8601 }}</td>
+                            <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
+                            <td>
+                                {% for observation in decision.observations.all %}
+                                    <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
+                                        {{ observation.observatory }}{% if observation.configuration %} ({{ observation.configuration }}){% endif %}
+                                    </a>
+                                {% empty %}
+                                    &mdash;
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endwith %}
                 {% endfor %}
             </tbody>
         </table>
@@ -84,7 +93,11 @@
                 {% for observation in observations %}
                     {% with event=observation.decision.event trigger=observation.decision.event.trigger %}
                         <tr>
-                            <td>{{ observation.created | timesince }} ago</td>
+                            <td>
+                                <time datetime="{{ observation.created | iso8601 }}" title="{{ observation.created | iso8601 }}">
+                                    {{ observation.created | timesince }} ago
+                                </time>
+                            </td>
                             <td><a href="{{ trigger.get_absolute_url }}">{{ trigger.name }}</a></td>
                             <td><a href="{{ event.get_absolute_url }}">{{ event.eventid }}</a></td>
                             <td>
@@ -112,7 +125,11 @@
             <tbody>
                 {% for notice in notices %}
                     <tr>
-                        <td>{{ notice.created | timesince }} ago</td>
+                        <td>
+                            <time datetime="{{ notice.created | iso8601 }}" title="{{ notice.created | iso8601 }}">
+                                    {{ notice.created | timesince }} ago
+                            </time>
+                        </td>
                         <td><code>{{ notice.stream.name }}</code></td>
                         <td><a href="{{ notice.get_absolute_url }}">View</a></td>
                     </tr>
