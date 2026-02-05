@@ -12,6 +12,7 @@ ExecStopPost=/usr/bin/podman compose --profile prod stop gcnlisten
 Restart=on-failure
 RestartSec=5
 StandardOutput=append:%h/tracet-systemd/gcnlisten.log
+StandardError=inherit
 
 [Install]
 WantedBy=default.target
