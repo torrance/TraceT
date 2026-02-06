@@ -4,7 +4,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    command: 'bash -c "uv run gunicorn --bind 0.0.0.0:8000 project.wsgi"'
+    command: 'uv run gunicorn --bind 0.0.0.0:8000 project.wsgi'
     env_file: "secrets.env"
     volumes:
       - ..:/tracet
@@ -15,7 +15,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    command: 'bash -c "uv run ./manage.py runserver 0.0.0.0:8000"'
+    command: 'uv run ./manage.py runserver 0.0.0.0:8000'
     environment:
       - DJANGO_DEBUG=true
     env_file: "secrets.env"
@@ -30,7 +30,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    command: 'bash -c "uv run ./manage.py listengcn"'
+    command: 'uv run ./manage.py listengcn'
     env_file: "secrets.env"
     volumes:
       - ..:/tracet
