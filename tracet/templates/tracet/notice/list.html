@@ -17,7 +17,7 @@
 
 <table>
     <thead>
-        <tr><th>Date</th><th>Stream</th><th>Format</th><th></th></tr>
+        <tr><th>Created</th><th>Stream</th><th>Format</th><th></th></tr>
     </thead>
     <tbody>
         {% for notice in notices %}
@@ -27,6 +27,8 @@
                 <td><code>{{ notice.stream.get_type_display }}</code></td>
                 <td><a href="{{ notice.get_absolute_url }}">View</a></td>
             </tr>
+        {% empty %}
+            <tr><td colspan="4" style="text-align:center">There are no notices yet.</td></tr>
         {% endfor %}
     <tbody></tbody>
 </table>

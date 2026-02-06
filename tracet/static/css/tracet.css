@@ -268,6 +268,24 @@ span.gcn-status {
     }
 }
 
+span.gcn-status.ok {
+    background-color: var(--color-ok);
+    color: var(--color-ok);  /* fallback */
+    color: rgba(0, 0, 0, 0);
+}
+
+span.gcn-status.lagged {
+    background-color: var(--color-maybe);
+    color: var(--color-maybe);  /* fallback */
+    color: rgba(0, 0, 0, 0);
+}
+
+span.gcn-status.fail {
+    background-color: var(--color-fail);
+    color: var(--color-fail);  /* fallback */
+    color: rgba(0, 0, 0, 0);
+}
+
 .observation-status {
     display: inline-block;
     padding: 0 0.3rem;
@@ -283,18 +301,6 @@ span.gcn-status {
     &.clash {
         background-color: var(--color-maybe);
     }
-}
-
-span.gcn-status.ok {
-    background-color: var(--color-ok);
-    color: var(--color-ok);  /* fallback */
-    color: rgba(0, 0, 0, 0);
-}
-
-span.gcn-status.fail {
-    background-color: var(--color-fail);
-    color: var(--color-fail);  /* fallback */
-    color: rgba(0, 0, 0, 0);
 }
 
 #trigger-meta {

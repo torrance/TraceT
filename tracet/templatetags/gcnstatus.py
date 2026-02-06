@@ -9,10 +9,22 @@ register = template.Library()
 
 @register.simple_tag
 def gcnstatus(**kwargs):
-    lastseen = cache.get(
-        "gcn_last_seen", default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC)
+    received = cache.get(
+        "gcn_heartbeat_received",
+        default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC),
     )
-    if datetime.datetime.now(datetime.UTC) - lastseen > datetime.timedelta(seconds=15):
-        return mark_safe(f'<code title="Last seen heartbeat: {lastseen}">Stream FAILURE <span class="gcn-status fail">Failed</span></code>')
+
+    lag = datetime.datetime.now(datetime.UTC)- received
+
+    if lag < datetime.timedelta(seconds=5):
+        return mark_safe(
+            f'<code title="Last heartbeat was received {received}">Stream OK <span class="gcn-status ok">OK</span></code>'
+        )
+    elif lag < datetime.timedelta(seconds=60):
+        return mark_safe(
+            f'<code title="Last heartbeat was received {received}">Stream DELAYED <span class="gcn-status delayed">Delayed</span></code>'
+        )
     else:
-        return mark_safe(f'<code title="Last seen heartbeat: {lastseen}">Stream OK <span class="gcn-status ok">OK</span></code>')
+        return mark_safe(
+            f'<code title="Last heartbeat was received {received}">Stream FAILURE <span class="gcn-status fail">Failed</span></code>'
+        )

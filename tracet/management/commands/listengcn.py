@@ -2,11 +2,15 @@ import json
 import logging
 import os
 
+import confluent_kafka
+import datetime
 import dateutil.parser
+from gcn_kafka import Consumer
 
 from django.core.cache import cache
 from django.core.management.base import BaseCommand
-from gcn_kafka import Consumer
+from django.db import IntegrityError
+
 
 from tracet.models import Notice, GCNStream
 
@@ -21,36 +25,81 @@ class Command(BaseCommand):
         # new streams that may have been added in the meantime.
         while True:
             logger.info("Creating new GCN consumer...")
-            streams = list(map(lambda s: s.name, GCNStream.objects.all())) + ["gcn.heartbeat"]
+            streams = ["gcn.heartbeat"] + [s.name for s in GCNStream.objects.all()]
+
+            config = {
+                "group.id": os.getenv("GCN_GROUP_ID"),
+                "auto.offset.reset": "earliest",
+                "enable.auto.commit": False,  # We will manually commit after saving the notice
+            }
 
             consumer = Consumer(
+                config,
                 client_id=os.getenv("GCN_CLIENT_ID"),
                 client_secret=os.getenv("GCN_CLIENT_SECRET"),
             )
             consumer.subscribe(streams)
 
-            for _ in range(300):
-                for message in consumer.consume(timeout=1):
-                    if message.topic() == "gcn.heartbeat":
-                        logger.debug(f"Recieved a new message ({message.topic()} #{message.offset()})")
-                    else:
-                        logger.info(f"Recieved a new message ({message.topic()} #{message.offset()})")
+            # Record the time we created the consumer
+            t0 = datetime.datetime.now()
 
-                    logger.debug(f"{message.value().decode()}")
+            while datetime.datetime.now() - t0 < datetime.timedelta(minutes=5):
+                for message in consumer.consume(timeout=1):
+                    timestamptype, created = message.timestamp()
+                    if timestamptype == confluent_kafka.TIMESTAMP_NOT_AVAILABLE:
+                        created = None
+                    else:
+                        # Kafka timestamp is in milliseconds since Unix epoch
+                        created = datetime.datetime.fromtimestamp(
+                            created / 1000, datetime.UTC
+                        )
+
+                    if message.topic() == "gcn.heartbeat":
+                        logger.debug(
+                            f"Recieved a new message ({message.topic()} #{message.offset()} @ {created}"
+                        )
+                    else:
+                        logger.info(
+                            f"Recieved a new message ({message.topic()} #{message.offset()} @ {created})"
+                        )
 
                     if message.error():
                         logger.warning(message.error())
                     elif message.topic() == "gcn.heartbeat":
                         try:
-                            t = dateutil.parser.parse(json.loads(message.value())["alert_datetime"])
-                            cache.set("gcn_last_seen", t, timeout=None)
+                            cache.set(
+                                "gcn_heartbeat_received",
+                                datetime.datetime.now(datetime.UTC),
+                            )
+                            cache.set("gcn_heartbeat_created", created)
                         except Exception as e:
-                            logger.error("An error occurred processing GCN heartbeat", exc_info=e)
+                            logger.error(
+                                "An error occurred processing GCN heartbeat", exc_info=e
+                            )
                     else:
                         try:
                             stream = GCNStream.objects.get(name=message.topic())
-                            notice = Notice(stream=stream, payload=message.value())
+                            notice = Notice(
+                                stream=stream,
+                                created=created,
+                                offset=message.offset(),
+                                payload=message.value(),
+                            )
                             notice.full_clean()
                             notice.save()
+
+                            # Let the service know we have processed this message
+                            consumer.commit(message)
+                        except IntegrityError as e:
+                            logger.error(
+                                "An IntegrityError occurred saving a new notice:",
+                                exc_info=e,
+                            )
+
+                            # Assume we've received the same offset twice, in which case
+                            # commit to acknowledge receipt
+                            consumer.commit(message)
                         except Exception as e:
-                            logger.error("An error occurred saving a new notice:", exc_info=e)
+                            logger.error(
+                                "An error occurred saving a new notice:", exc_info=e
+                            )

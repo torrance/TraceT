@@ -29,12 +29,15 @@ class Notice(models.Model):
     stream = models.ForeignKey(
         "GCNStream", related_name="notices", on_delete=models.CASCADE
     )
-    created = models.DateTimeField(default=timezone.now)
+    offset = models.IntegerField()
+    created = models.DateTimeField(null=True)
+    received = models.DateTimeField(default=timezone.now)
     payload = models.BinaryField()
 
     class Meta:
         ordering = ["-created"]
-        indexes = [models.Index(fields=["-created"])]
+        indexes = [models.Index(fields=["created", "received"])]
+        unique_together = ("stream", "offset")
 
     def __str__(self):
         return str(self.stream)
