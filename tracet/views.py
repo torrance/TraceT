@@ -35,7 +35,7 @@ class Home(View):
             .first()
         )
         kafkaok = datetime.datetime.now(datetime.UTC) - cache.get(
-            "gcn_last_seen", default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC)
+            "gcn_heartbeat_received", default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC)
         ) < datetime.timedelta(seconds=15)
         mostrecentnotice = models.Notice.objects.order_by("-created").first()
 
