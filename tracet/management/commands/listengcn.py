@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import dateutil.parser
 
@@ -23,8 +24,8 @@ class Command(BaseCommand):
             streams = list(map(lambda s: s.name, GCNStream.objects.all())) + ["gcn.heartbeat"]
 
             consumer = Consumer(
-                client_id="36drla0hks7njn1bkfhvir7iaq",
-                client_secret="138mt2l6agb13cq0vli7g8v5rut6n18hmlr21u4r31hjbh5n5feg",
+                client_id=os.getenv("GCN_CLIENT_ID"),
+                client_secret=os.getenv("GCN_CLIENT_SECRET"),
             )
             consumer.subscribe(streams)
 
