@@ -8,8 +8,8 @@ import dateutil.parser
 from gcn_kafka import Consumer
 
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
-from django.db import IntegrityError
 
 
 from tracet.models import Notice, GCNStream
@@ -93,9 +93,9 @@ class Command(BaseCommand):
 
                             # Let the service know we have processed this message
                             consumer.commit(message)
-                        except IntegrityError as e:
+                        except ValidationError as e:
                             logger.error(
-                                "An IntegrityError occurred saving a new notice:",
+                                "An ValidationError occurred saving a new notice; assuming we have already seen this notice",
                                 exc_info=e,
                             )
 
