@@ -30,7 +30,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    command: 'sh -c "uv run ./manage.py listengcn"'
+    command: 'bash -c "uv run ./manage.py listengcn"'
     env_file: "secrets.env"
     volumes:
       - ..:/tracet
