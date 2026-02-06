@@ -75,6 +75,7 @@ class Command(BaseCommand):
                                 datetime.datetime.now(datetime.UTC),
                             )
                             cache.set("gcn_heartbeat_created", created)
+                            consumer.commit(message)
                         except Exception as e:
                             logger.error(
                                 "An error occurred processing GCN heartbeat", exc_info=e
