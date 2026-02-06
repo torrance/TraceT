@@ -21,6 +21,9 @@ class Command(BaseCommand):
     help = "Start listening to GCN notices"
 
     def handle(self, *args, **kwargs):
+        if not os.getenv("GCN_GROUP_ID"):
+            raise Exception("No GCN_GROUP_ID found in environment variables")
+
         # We periodically reconnect to GCN every ~10 minutes so that we pick up any
         # new streams that may have been added in the meantime.
         while True:
