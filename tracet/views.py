@@ -52,7 +52,6 @@ class Home(View):
                 "notices": models.Notice.objects.order_by("-created")[:10],
                 "decisions": models.Decision.get_interesting_decisions()[:15],
                 "observations": models.Observation.objects.order_by("-created")[:10],
-                "triggers": models.Trigger.objects.order_by("priority"),
             },
         )
 

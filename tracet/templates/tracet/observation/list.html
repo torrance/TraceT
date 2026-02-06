@@ -37,6 +37,8 @@
                     <td><a href="{{ observation.get_absolute_url }}">View</a></td>
                 </tr>
             {% endwith %}
+        {% empty %}
+            <tr><td colspan=6 style="text-align: center;">No observations have been attempted yet.</td></tr>
         {% endfor %}
     <tbody></tbody>
 </table>
