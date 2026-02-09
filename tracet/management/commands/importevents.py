@@ -81,7 +81,7 @@ class Command(BaseCommand):
                 )
 
                 try:
-                    s = GCNStream.objects.get(name=stream)
+                    s = GCNStream.objects.get(topic=stream)
                     e = Event(
                         stream=s,
                         created=parse_datetime(time[0]),

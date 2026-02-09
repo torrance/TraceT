@@ -124,7 +124,7 @@
 
         <table class="left-align">
             <thead>
-                <tr><td>Received</td><td>Type</td><td>View</td></tr>
+                <tr><td>Created</td><td>Topic</td><td>View</td></tr>
             </thead>
             <tbody>
                 {% for notice in notices %}
@@ -134,7 +134,7 @@
                                     {{ notice.created | timesince }} ago
                             </time>
                         </td>
-                        <td><code>{{ notice.stream.name }}</code></td>
+                        <td><code>{{ notice.stream.topic }}</code></td>
                         <td><a href="{{ notice.get_absolute_url }}">View</a></td>
                     </tr>
                 {% empty %}

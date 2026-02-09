@@ -57,7 +57,7 @@ class Command(BaseCommand):
                         stream = "gcn.classic.voevent.SWIFT_BAT_GRB_LC"
 
                     try:
-                        s = GCNStream.objects.get(name=stream)
+                        s = GCNStream.objects.get(topic=stream)
                         e = Event(
                             stream=s, created=parse_datetime(time[0]), payload=r.content
                         )

@@ -8,4 +8,5 @@ from . import models
 
 @admin.register(models.GCNStream)
 class GCNStream(admin.ModelAdmin):
-    list_display = ["name", "type"]
+    list_display = ["topic", "type", "status"]
+    readonly_fields = ["status"]

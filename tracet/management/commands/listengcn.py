@@ -28,7 +28,7 @@ class Command(BaseCommand):
         # new streams that may have been added in the meantime.
         while True:
             logger.info("Creating new GCN consumer...")
-            streams = ["gcn.heartbeat"] + [s.name for s in GCNStream.objects.all()]
+            streams = ["gcn.heartbeat"] + [s.topic for s in GCNStream.objects.all()]
 
             config = {
                 "group.id": os.getenv("GCN_GROUP_ID"),
@@ -68,6 +68,18 @@ class Command(BaseCommand):
 
                     if message.error():
                         logger.warning(message.error())
+
+                        try:
+                            stream = GCNStream.objects.get(topic=message.topic())
+                            stream.status = f"Error ({message.error().str()})"
+                            stream.full_clean()
+                            stream.save()
+                        except Exception as e:
+                            logger.error(
+                                "Tried and failed to record Kafka error message",
+                                exc_info=e,
+                            )
+
                     elif message.topic() == "gcn.heartbeat":
                         try:
                             cache.set(
@@ -82,7 +94,11 @@ class Command(BaseCommand):
                             )
                     else:
                         try:
-                            stream = GCNStream.objects.get(name=message.topic())
+                            stream = GCNStream.objects.get(topic=message.topic())
+                            stream.status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
+                            stream.full_clean()
+                            stream.save()
+
                             notice = Notice(
                                 stream=stream,
                                 created=created,

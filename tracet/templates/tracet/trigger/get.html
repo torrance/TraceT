@@ -85,7 +85,7 @@
             {% for notice in event.noticess %}
             <tr>
                 <td>{{ notice.received | iso8601 }}</td>
-                <td style="text-align: left"><code>{{ notice.stream.name }}</code></td>
+                <td style="text-align: left"><code>{{ notice.stream.topic }}</code></td>
                 <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
                 <td>{% for factor in notice.decision.factors.all %}
                     {{ factor.html }}

@@ -18,11 +18,12 @@ class GCNStream(models.Model):
         XML = ("xml", "XML")
         JSON = ("json", "JSON")
 
-    name = models.CharField(max_length=500, unique=True)
+    topic = models.CharField(max_length=500, unique=True)
     type = models.CharField(max_length=500, choices=Format, default="xml")
+    status = models.CharField(max_length=500, default="—")
 
     def __str__(self):
-        return f"{self.name} [{self.type}]"
+        return f"{self.topic} [{self.type}]"
 
 
 class Notice(models.Model):
