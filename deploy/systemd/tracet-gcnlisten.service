@@ -7,7 +7,7 @@ PartOf=tracet.service
 [Service]
 Type=simple
 WorkingDirectory=/home/debian/TraceT/deploy
-ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans gcnlisten
+ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans --exit-code-from gcnlisten gcnlisten
 ExecStopPost=/usr/bin/podman compose --profile prod stop gcnlisten
 Restart=on-failure
 RestartSec=5

@@ -7,7 +7,7 @@ PartOf=tracet.service
 [Service]
 Type=simple
 WorkingDirectory=/home/debian/TraceT/deploy
-ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans gunicorn
+ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans --exit-code-from gunicorn gunicorn
 ExecStopPost=/usr/bin/podman compose --profile prod stop gunicorn
 Restart=on-failure
 RestartSec=5

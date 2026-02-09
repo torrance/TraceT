@@ -7,7 +7,7 @@ PartOf=tracet.service
 [Service]
 Type=simple
 WorkingDirectory=/home/debian/TraceT/deploy
-ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans caddy
+ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans --exit-code-from caddy caddy
 ExecStopPost=/usr/bin/podman compose --profile prod stop caddy
 Restart=on-failure
 RestartSec=5

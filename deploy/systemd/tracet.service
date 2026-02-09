@@ -3,6 +3,9 @@
 # > systemctl --user daemon-reload
 # > systemctl --user enable tracet.service
 # > systemctl --user start tracet.service
+# You may also need to ensure these services stay alive after a user has
+# logged out. You can do this my running:
+# > sudo loginctl enable-linger <USER>
 
 [Unit]
 Description=TraceT (Init)
