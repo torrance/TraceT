@@ -5,6 +5,7 @@ import rules
 def is_trigger_owner(user, trigger):
     return trigger.user == user
 
+
 @rules.predicate
 def isstaff(user):
     return user.is_staff
@@ -33,23 +34,14 @@ rules.add_perm(
     "tracet.retrigger_trigger", rules.is_group_member("admin") | is_trigger_owner
 )
 
-# Allow editing of Topics
+# Allow adding/deleting Topics
 rules.add_perm("tracet.view_topic", rules.is_group_member("admin"))
 rules.add_perm("tracet.add_topic", rules.is_group_member("admin"))
-rules.add_perm("tracet.change_topic", rules.is_group_member("admin"))
 rules.add_perm("tracet.delete_topic", rules.is_group_member("admin"))
 
 # User administration permissions
 rules.add_perm("auth", rules.is_group_member("admin"))
-rules.add_perm(
-    "auth.view_user", rules.is_group_member("admin")
-)
-rules.add_perm(
-    "auth.add_user", rules.is_group_member("admin")
-)
-rules.add_perm(
-    "auth.change_user", rules.is_group_member("admin")
-)
-rules.add_perm(
-    "auth.delete_user", rules.is_group_member("admin")
-)
+rules.add_perm("auth.view_user", rules.is_group_member("admin"))
+rules.add_perm("auth.add_user", rules.is_group_member("admin"))
+rules.add_perm("auth.change_user", rules.is_group_member("admin"))
+rules.add_perm("auth.delete_user", rules.is_group_member("admin"))
