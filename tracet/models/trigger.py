@@ -38,7 +38,7 @@ class Trigger(models.Model):
         default=False,
         help_text="Inactive triggers will send observation requests to observatories marked as testing only.",
     )
-    streams = models.ManyToManyField("GCNStream")
+    topics = models.ManyToManyField("Topic")
     eventid_path = JXPathField(
         verbose_name="Event ID Path",
         help_text="The (x|j)json path to event ID. This value is a unique classifier that groups one or more notices that are related to the same underlying event.",
@@ -59,8 +59,8 @@ class Trigger(models.Model):
         return reverse("triggerview", args=[self.id])
 
     def get_or_create_event(self, notice: "Notice") -> Optional["Event"]:
-        # Check if we are listening to this particular stream
-        if not self.streams.filter(id=notice.stream.id).exists():
+        # Check if we are listening to this particular topic
+        if not self.topics.filter(id=notice.topic.id).exists():
             return None
 
         # Extract the group id (or return None if we can't find it)

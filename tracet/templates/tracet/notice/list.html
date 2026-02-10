@@ -17,14 +17,14 @@
 
 <table>
     <thead>
-        <tr><th>Created</th><th>Stream</th><th>Format</th><th></th></tr>
+        <tr><th>Created</th><th>Topic</th><th>Format</th><th></th></tr>
     </thead>
     <tbody>
         {% for notice in notices %}
             <tr>
                 <td>{{ notice.created | iso8601 }}</td>
-                <td style="text-align: left;"><code>{{ notice.stream }}</code></td>
-                <td><code>{{ notice.stream.get_type_display }}</code></td>
+                <td style="text-align: left;"><code>{{ notice.topic }}</code></td>
+                <td><code>{{ notice.topic.get_type_display }}</code></td>
                 <td><a href="{{ notice.get_absolute_url }}">View</a></td>
             </tr>
         {% empty %}

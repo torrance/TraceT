@@ -134,7 +134,7 @@
                                     {{ notice.created | timesince }} ago
                             </time>
                         </td>
-                        <td><code>{{ notice.stream.topic }}</code></td>
+                        <td><code>{{ notice.topic.name }}</code></td>
                         <td><a href="{{ notice.get_absolute_url }}">View</a></td>
                     </tr>
                 {% empty %}

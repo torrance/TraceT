@@ -24,11 +24,11 @@
     {% endif %}
 </div>
 
-<h2>Streams</h2>
+<h2>Topics</h2>
 
 <ul>
-    {% for stream in trigger.streams.all %}
-    <li><code>{{ stream }}</code></li>
+    {% for topic in trigger.topics.all %}
+    <li><code>{{ topic }}</code></li>
     {% endfor %}
 </ul>
 
@@ -76,7 +76,7 @@
             <tr><th colspan=5>Notices</th></tr>
             <tr>
                 <th>Received</th>
-                <th style="text-align: left;">Stream</th>
+                <th style="text-align: left;">Topic</th>
                 <th style="width: 100%"></th>
                 <th colspan="{{ event.noticess.0.decision.factors.all | length }}">Current conditions</th>
             </tr>
@@ -85,7 +85,7 @@
             {% for notice in event.noticess %}
             <tr>
                 <td>{{ notice.received | iso8601 }}</td>
-                <td style="text-align: left"><code>{{ notice.stream.topic }}</code></td>
+                <td style="text-align: left"><code>{{ notice.topic.name }}</code></td>
                 <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
                 <td>{% for factor in notice.decision.factors.all %}
                     {{ factor.html }}

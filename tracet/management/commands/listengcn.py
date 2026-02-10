@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
 
-from tracet.models import Notice, GCNStream
+from tracet.models import Notice, Topic
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,10 @@ class Command(BaseCommand):
             raise Exception("No GCN_GROUP_ID found in environment variables")
 
         # We periodically reconnect to GCN every ~10 minutes so that we pick up any
-        # new streams that may have been added in the meantime.
+        # new topics that may have been added in the meantime.
         while True:
             logger.info("Creating new GCN consumer...")
-            streams = ["gcn.heartbeat"] + [s.topic for s in GCNStream.objects.all()]
+            topics = ["gcn.heartbeat"] + [t.name for t in Topic.objects.all()]
 
             config = {
                 "group.id": os.getenv("GCN_GROUP_ID"),
@@ -41,7 +41,7 @@ class Command(BaseCommand):
                 client_id=os.getenv("GCN_CLIENT_ID"),
                 client_secret=os.getenv("GCN_CLIENT_SECRET"),
             )
-            consumer.subscribe(streams)
+            consumer.subscribe(topics)
 
             # Record the time we created the consumer
             t0 = datetime.datetime.now()
@@ -70,10 +70,10 @@ class Command(BaseCommand):
                         logger.warning(message.error())
 
                         try:
-                            stream = GCNStream.objects.get(topic=message.topic())
-                            stream.status = f"Error ({message.error().str()})"
-                            stream.full_clean()
-                            stream.save()
+                            topic = Topic.objects.get(topic=message.topic())
+                            topic.status = f"Error ({message.error().str()})"
+                            topic.full_clean()
+                            topic.save()
                         except Exception as e:
                             logger.error(
                                 "Tried and failed to record Kafka error message",
@@ -94,13 +94,13 @@ class Command(BaseCommand):
                             )
                     else:
                         try:
-                            stream = GCNStream.objects.get(topic=message.topic())
-                            stream.status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
-                            stream.full_clean()
-                            stream.save()
+                            topic = Topic.objects.get(topic=message.topic())
+                            topic.status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
+                            topic.full_clean()
+                            topic.save()
 
                             notice = Notice(
-                                stream=stream,
+                                topic=topic,
                                 created=created,
                                 offset=message.offset(),
                                 payload=message.value(),

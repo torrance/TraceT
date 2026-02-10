@@ -6,9 +6,8 @@ def is_trigger_owner(user, trigger):
     return trigger.user == user
 
 @rules.predicate
-def always(user):
-    print("Hi there!")
-    return False
+def isstaff(user):
+    return user.is_staff
 
 
 # Module level permission of TraceT required for admin
@@ -34,11 +33,11 @@ rules.add_perm(
     "tracet.retrigger_trigger", rules.is_group_member("admin") | is_trigger_owner
 )
 
-# Allow editing of GCN streams
-rules.add_perm("tracet.view_gcnstream", rules.is_group_member("admin"))
-rules.add_perm("tracet.add_gcnstream", rules.is_group_member("admin"))
-rules.add_perm("tracet.change_gcnstream", rules.is_group_member("admin"))
-rules.add_perm("tracet.delete_gcnstream", rules.is_group_member("admin"))
+# Allow editing of Topics
+rules.add_perm("tracet.view_topic", rules.is_group_member("admin"))
+rules.add_perm("tracet.add_topic", rules.is_group_member("admin"))
+rules.add_perm("tracet.change_topic", rules.is_group_member("admin"))
+rules.add_perm("tracet.delete_topic", rules.is_group_member("admin"))
 
 # User administration permissions
 rules.add_perm("auth", rules.is_group_member("admin"))

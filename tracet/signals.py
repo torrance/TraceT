@@ -13,13 +13,13 @@ def resync_events(trigger: models.Trigger):
     # Keep a record of all matching events
     events = dict()
 
-    # Create events that match the stream and eventid criteria
-    for notice in models.Notice.objects.filter(stream__in=trigger.streams.all()):
+    # Create events that match the topic and eventid criteria
+    for notice in models.Notice.objects.filter(topic__in=trigger.topics.all()):
         event = trigger.get_or_create_event(notice)
         if event:
             events[event.id] = event
 
-    # Delete any events that no longer match the stream/eventid criteria
+    # Delete any events that no longer match the topic/eventid criteria
     trigger.events.exclude(id__in=events.keys()).delete()
 
     # Set or update event time
@@ -41,7 +41,7 @@ def on_trigger_save(sender, instance, created, **kwargs):
     """
     trigger = instance
 
-    # Build the associated list of events, taking into account any changes stream/eventid
+    # Build the associated list of events, taking into account any changes topic/eventid
     resync_events(trigger)
 
     # Set or update (where Trigger.time_path has changed) event time
@@ -49,8 +49,8 @@ def on_trigger_save(sender, instance, created, **kwargs):
         event.updatetime()
 
 
-@receiver(m2m_changed, sender=models.Trigger.streams.through)
-def no_trigger_streams_changed(sender, instance, pk_set, action, reverse, **kwargs):
+@receiver(m2m_changed, sender=models.Trigger.topics.through)
+def on_trigger_topics_changed(sender, instance, pk_set, action, reverse, **kwargs):
     """
     For each new notice added to an event, update the Event.time field to reflect
     the _earliest_ `trigger.time_path` value.
@@ -58,7 +58,7 @@ def no_trigger_streams_changed(sender, instance, pk_set, action, reverse, **kwar
     trigger = instance
 
     if not reverse and action.startswith("post"):
-        # Build the associated list of events, taking into account any changes stream/eventid
+        # Build the associated list of events, taking into account any changes topic/eventid
         resync_events(trigger)
 
 

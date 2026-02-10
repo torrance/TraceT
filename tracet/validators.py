@@ -1,18 +1,18 @@
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from tracet.models import GCNStream
+from tracet.models import Topic
 
 
-def unique_stream_format(pk="pk"):
-    def unique_stream_format(vals):
+def unique_topic_format(pk="pk"):
+    def unique_topic_format(vals):
         if len(vals):
-            notices = GCNStream.objects.filter(**{f"{pk}__in": vals})
+            notices = Topic.objects.filter(**{f"{pk}__in": vals})
             types = set(n.type for n in notices)
             if len(types) > 1:
                 raise ValidationError(
-                    _("Streams must be of a single type (currently contains %(types)s)"),
+                    _("Topics must be of a single format (currently contains %(types)s)"),
                     params={"types": ", ".join(t.upper() for t in types)}
                 )
 
-    return unique_stream_format
+    return unique_topic_format

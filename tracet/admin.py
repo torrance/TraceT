@@ -5,16 +5,16 @@ from django.contrib import admin
 from . import models
 
 
-@admin.register(models.GCNStream)
-class GCNStream(admin.ModelAdmin):
-    list_display = ["topic", "type", "notice_count", "payload_filesize", "status"]
+@admin.register(models.Topic)
+class Topic(admin.ModelAdmin):
+    list_display = ["name", "type", "notice_count", "payload_filesize", "status"]
 
     @admin.display(description="Payload size [MB]")
     def payload_filesize(self, obj):
         # Return the cumulative payload filesize of this topic's associated notices. [MB]
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT SUM(OCTET_LENGTH(payload)) FROM tracet_notice WHERE stream_id = %s",
+                "SELECT SUM(OCTET_LENGTH(payload)) FROM tracet_notice WHERE topic_id = %s",
                 [obj.id],
             )
             if filesize := cursor.fetchone()[0]:

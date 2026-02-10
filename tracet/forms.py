@@ -23,15 +23,15 @@ class Trigger(forms.ModelForm):
     user = forms.ModelChoiceField(
         get_user_model().objects, disabled=True, widget=forms.HiddenInput
     )
-    streams = forms.ModelMultipleChoiceField(
-        models.GCNStream.objects, validators=[validators.unique_stream_format(pk="id")]
+    topics = forms.ModelMultipleChoiceField(
+        models.Topic.objects, validators=[validators.unique_topic_format(pk="id")]
     )
 
     def clean(self):
         super().clean()
 
         notices = models.Notice.objects.filter(
-            stream__id__in=self.cleaned_data["streams"]
+            topic__id__in=self.cleaned_data["topics"]
         )
 
         try:
@@ -70,7 +70,7 @@ class Trigger(forms.ModelForm):
 
     class Meta:
         model = models.Trigger
-        fields = ["name", "user", "streams", "eventid_path", "time_path", "expiry"]
+        fields = ["name", "user", "topics", "eventid_path", "time_path", "expiry"]
 
 
 class NumericRangeCondition(forms.ModelForm):

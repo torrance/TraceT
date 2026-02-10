@@ -51,12 +51,12 @@ class DateRangeWidget(django_filters.widgets.SuffixedMultiWidget):
 
 
 class Notice(django_filters.FilterSet):
-    stream = django_filters.ModelChoiceFilter(queryset=models.GCNStream.objects.all())
+    topic = django_filters.ModelChoiceFilter(queryset=models.Topic.objects.all())
     created = django_filters.DateFromToRangeFilter(widget=DateRangeWidget())
 
     class Meta:
         model = models.Notice
-        fields = ["stream", "stream__type", "created"]
+        fields = ["topic", "topic__type", "created"]
 
 
 class Observation(django_filters.FilterSet):

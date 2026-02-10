@@ -13,23 +13,23 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
-class GCNStream(models.Model):
+class Topic(models.Model):
     class Format(models.TextChoices):
         XML = ("xml", "XML")
         JSON = ("json", "JSON")
 
-    topic = models.CharField(max_length=500, unique=True)
-    type = models.CharField(max_length=500, choices=Format, default="xml")
+    name = models.CharField(max_length=500, unique=True)
+    type = models.CharField(
+        max_length=500, choices=Format, default="xml", verbose_name="Format"
+    )
     status = models.CharField(max_length=500, default="—")
 
     def __str__(self):
-        return f"{self.topic} [{self.type}]"
+        return f"{self.name} [{self.type}]"
 
 
 class Notice(models.Model):
-    stream = models.ForeignKey(
-        "GCNStream", related_name="notices", on_delete=models.CASCADE
-    )
+    topic = models.ForeignKey("Topic", related_name="notices", on_delete=models.CASCADE)
     offset = models.IntegerField()
     created = models.DateTimeField(null=True)
     received = models.DateTimeField(default=timezone.now)
@@ -38,16 +38,16 @@ class Notice(models.Model):
     class Meta:
         ordering = ["-created"]
         indexes = [models.Index(fields=["created", "received"])]
-        unique_together = ("stream", "offset")
+        unique_together = ("topic", "offset")
 
     def __str__(self):
-        return str(self.stream)
+        return str(self.topic)
 
     def get_absolute_url(self):
         return reverse("notice", args=[self.id])
 
     def file_type(self):
-        return self.stream.get_type_display()
+        return self.topic.get_type_display()
 
     def query(self, path):
         # Handle empty paths gracefully
@@ -55,19 +55,19 @@ class Notice(models.Model):
             return None
 
         try:
-            if self.stream.type == "xml":
+            if self.topic.type == "xml":
                 rootnode = etree.parse(io.BytesIO(self.payload)).getroot()
                 return rootnode.xpath(path, namespaces=rootnode.nsmap)[0]
-            elif self.stream.type == "json":
+            elif self.topic.type == "json":
                 return jsonpath.find(path, json.loads(self.payload))[0].value
         except IndexError:
             # In the case that no value is found at the path, we return None
             return None
 
     def pretty_payload(self):
-        if self.stream.type == "xml":
+        if self.topic.type == "xml":
             return etree.tostring(
                 etree.parse(io.BytesIO(self.payload)), pretty_print=True
             ).decode()
-        elif self.stream.type == "json":
+        elif self.topic.type == "json":
             return json.dumps(json.loads(self.payload), indent=4)

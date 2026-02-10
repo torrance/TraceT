@@ -70,7 +70,7 @@ class NoticeList(View):
     def get(self, request):
         filter = filters.Notice(
             request.GET,
-            models.Notice.objects.order_by("-created").select_related("stream"),
+            models.Notice.objects.order_by("-created").select_related("topic"),
         )
 
         paginator = Paginator(filter.qs, 100)
