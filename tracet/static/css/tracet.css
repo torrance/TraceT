@@ -274,7 +274,7 @@ span.gcn-status.ok {
     color: rgba(0, 0, 0, 0);
 }
 
-span.gcn-status.lagged {
+span.gcn-status.delayed {
     background-color: var(--color-maybe);
     color: var(--color-maybe);  /* fallback */
     color: rgba(0, 0, 0, 0);
