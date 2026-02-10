@@ -17,7 +17,11 @@ class GCNStream(admin.ModelAdmin):
                 "SELECT SUM(OCTET_LENGTH(payload)) FROM tracet_notice WHERE stream_id = %s",
                 [obj.id],
             )
-            return cursor.fetchone()[0] / 1e6
+            if filesize := cursor.fetchone()[0]:
+                return filesize / 1e6
+            else:
+                # If there are no notices, fetchone() will return None
+                return 0
 
     @admin.display(description="Notice count")
     def notice_count(self, obj):
