@@ -70,7 +70,7 @@ class Command(BaseCommand):
                         logger.warning(message.error())
 
                         try:
-                            topic = Topic.objects.get(topic=message.topic())
+                            topic = Topic.objects.get(name=message.topic())
                             topic.status = f"Error ({message.error().str()})"
                             topic.full_clean()
                             topic.save()
@@ -94,7 +94,7 @@ class Command(BaseCommand):
                             )
                     else:
                         try:
-                            topic = Topic.objects.get(topic=message.topic())
+                            topic = Topic.objects.get(name=message.topic())
                             topic.status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
                             topic.full_clean()
                             topic.save()
