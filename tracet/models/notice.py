@@ -60,6 +60,9 @@ class Notice(models.Model):
                 return rootnode.xpath(path, namespaces=rootnode.nsmap)[0]
             elif self.topic.type == "json":
                 return jsonpath.find(path, json.loads(self.payload))[0].value
+        except (etree.XPathEvalError, jsonpath.JSONPathSyntaxError) as e:
+            logging.warning("A XPath/JSONPath query failed", exc_info=e)
+            return None
         except IndexError:
             # In the case that no value is found at the path, we return None
             return None
