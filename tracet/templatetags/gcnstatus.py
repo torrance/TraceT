@@ -18,13 +18,13 @@ def gcnstatus(**kwargs):
 
     if lag < datetime.timedelta(seconds=5):
         return mark_safe(
-            f'<code title="Last heartbeat was received {lag.microseconds / 1e6:.1f} seconds ago">Stream OK <span class="gcn-status ok">OK</span></code>'
+            f'<code title="Last heartbeat was received {lag.seconds + lag.microseconds / 1e6:.1f} seconds ago">Stream OK <span class="gcn-status ok">OK</span></code>'
         )
     elif lag < datetime.timedelta(seconds=60):
         return mark_safe(
-            f'<code title="Last heartbeat was received {lag.microseconds / 1e6:.1f} seconds ago">Stream DELAYED <span class="gcn-status delayed">Delayed</span></code>'
+            f'<code title="Last heartbeat was received {lag.seconds + lag.microseconds / 1e6:.1f} seconds ago">Stream DELAYED <span class="gcn-status delayed">Delayed</span></code>'
         )
     else:
         return mark_safe(
-            f'<code title="Last heartbeat was received {lag.microseconds / 1e6:.1f} seconds ago">Stream FAILURE <span class="gcn-status fail">Failed</span></code>'
+            f'<code title="Last heartbeat was received {lag} ago">Stream FAILURE <span class="gcn-status fail">Failed</span></code>'
         )
