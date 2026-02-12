@@ -40,8 +40,7 @@ rules.add_perm("tracet.add_topic", rules.is_group_member("admin"))
 rules.add_perm("tracet.delete_topic", rules.is_group_member("admin"))
 
 # User administration permissions
-rules.add_perm("auth", rules.is_group_member("admin"))
-rules.add_perm("auth.view_user", rules.is_group_member("admin"))
-rules.add_perm("auth.add_user", rules.is_group_member("admin"))
-rules.add_perm("auth.change_user", rules.is_group_member("admin"))
-rules.add_perm("auth.delete_user", rules.is_group_member("admin"))
+rules.add_perm("tracet.view_user", rules.is_group_member("admin"))
+rules.add_perm("tracet.add_user", rules.is_group_member("admin"))
+rules.add_perm("tracet.change_user", rules.is_group_member("admin"))
+rules.add_perm("tracet.delete_user", rules.is_group_member("admin"))

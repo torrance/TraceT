@@ -1,5 +1,6 @@
 from django.db import connection
 from django.contrib import admin
+import django.contrib.auth as auth
 
 # Register your models here.
 from . import models
@@ -29,3 +30,24 @@ class Topic(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False  # Disable editing existing entries
+
+
+# auth.models.User has already been registered with Django admin
+# so we subclass it simply so that we can register it ourselves with minor changes.
+class User(auth.models.User):
+    class Meta:
+        proxy = True
+
+
+@admin.register(User)
+class User(auth.admin.UserAdmin):
+    def __init__(self, *args, **kwargs):
+        # Remove the user_permissions field from the form: we only want people using
+        # groups as the permission mechanism.
+        self.fieldsets[2][1]["fields"] = (
+            "is_active",
+            "is_staff",
+            "is_superuser",
+            "groups",
+        )
+        super().__init__(*args, **kwargs)
