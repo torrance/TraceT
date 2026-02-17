@@ -355,12 +355,13 @@ class TriggerDelete(View):
 class TriggerView(View):
     def get(self, request, id):
         trigger = get_object_or_404(models.Trigger, id=id)
+        telescope = trigger.get_telescope()
 
         user = get_user(request)
         if not user.has_perm("tracet.view_trigger"):
             raise PermissionDenied("You do not have permission to view this trigger.")
 
-        paginator = Paginator(trigger.events.order_by("-time"), 10)
+        paginator = Paginator(trigger.events.filter(disabled=False).order_by("-time"), 10)
 
         # If event_id is passed, set page number so that eventid displays
         events = None
@@ -388,6 +389,9 @@ class TriggerView(View):
                     source=models.Decision.Source.SIMULATED,
                 )
                 notice.decision = decision
+
+            if telescope:
+                notice.pointings = telescope.get_pointings(event, notice.created)
 
             event.form = forms.EventTrigger(initial={"eventid": event.id})
 

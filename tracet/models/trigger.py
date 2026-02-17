@@ -73,7 +73,9 @@ class Trigger(models.Model):
 
         # Get or create event and ensure notice is addded
         event, _ = self.events.get_or_create(eventid=eventid)
+        event.disabled = False
         event.notices.add(notice)
+        event.save()
 
         return event
 
@@ -129,6 +131,12 @@ class Event(models.Model):
     eventid = models.CharField(max_length=500)
     time = models.DateTimeField(null=True)
 
+    # The disabled field is used to ensure decisions and observations linked by FK are
+    # not deleted when a Trigger's topics or event ID invalidate an event.
+    # If the Trigger's criteria change again and make the event valid once more, the
+    # historical decision and event will also once more be presented.
+    disabled = models.BooleanField(default=False)
+
     def __str__(self):
         return f"Event(Trigger={self.trigger.id} EventID={self.eventid})"
 
@@ -141,8 +149,11 @@ class Event(models.Model):
             + self.eventid
         )
 
-    def querylatest(self, query):
-        for notice in self.notices.order_by("-created"):
+    def querylatest(self, query, createdbefore=None):
+        notices = self.notices.order_by("-created")
+        notices = notices.filter(created__lte=createdbefore) if createdbefore else notices
+
+        for notice in notices:
             result = notice.query(query)
             if result is not None:
                 return result

@@ -1,5 +1,6 @@
 from base64 import b64decode
 import datetime
+import hashlib
 from io import BytesIO
 import json
 import logging
@@ -14,6 +15,7 @@ import astropy_healpix as ah
 import numpy as np
 import requests
 
+from django.core.cache import cache
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
@@ -127,6 +129,7 @@ class Telescope(models.Model):
         )
 
         try:
+            observation.pointings = self.get_pointings(decision.event)
             self.prepare_request(observation)
 
             current_observation = (
@@ -163,6 +166,9 @@ class Telescope(models.Model):
 
         observation.log = self.get_log()
         return observation.save()
+
+    def get_pointings(self, event: "Event") -> list[SkyCoord]:
+        raise NotImplementedError
 
     def prepare_request(self, observation: Observation):
         raise NotImplementedError()
@@ -277,24 +283,25 @@ class MWACorrelator(MWABase):
     def __str__(self):
         return "MWA Correlator Configuration"
 
-    def prepare_request(self, observation: Observation):
+    def get_pointings(self, event, createdbefore=None):
         try:
-            event = observation.decision.event
-            ra = event.querylatest(self.ra_path)
-            dec = event.querylatest(self.dec_path)
-            pointing = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
-        except Exception as e:
-            self.log("An error occurred attempting to parse RA,Dec values:", e)
-            raise Telescope.PreparationException() from e
+            ra = event.querylatest(self.ra_path, createdbefore)
+            dec = event.querylatest(self.dec_path, createdbefore)
+            return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
+        except (TypeError, ValueError):
+            return []
 
-        observation.pointings = [pointing]
+    def prepare_request(self, observation: Observation):
+        if len(observation.pointings) != 1:
+            self.log("An error occurred attempting to parse RA,Dec values:")
+            raise Telescope.PreparationException()
 
         self.api_params = dict(
             project_id=self.projectid,
             secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
-            ra=pointing.ra.deg,
-            dec=pointing.dec.deg,
+            ra=observation.pointings[0].ra.deg,
+            dec=observation.pointings[0].dec.deg,
             avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
             tileset=self.tileset,
@@ -342,24 +349,25 @@ class MWAVCS(MWABase):
     def __str__(self):
         return "MWA VCS Configuration"
 
-    def prepare_request(self, observation: Observation):
+    def get_pointings(self, event, createdbefore=None):
         try:
-            event = observation.decision.event
-            ra = event.querylatest(self.ra_path)
-            dec = event.querylatest(self.dec_path)
-            pointing = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
-        except Exception as e:
-            self.log("An error occurred attempting to parse RA,Dec values:", e)
-            raise Telescope.PreparationException() from e
+            ra = event.querylatest(self.ra_path, createdbefore)
+            dec = event.querylatest(self.dec_path, createdbefore)
+            return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
+        except (TypeError, ValueError):
+            return []
 
-        observation.pointings = [pointing]
+    def prepare_request(self, observation: Observation):
+        if len(observation.pointings) != 1:
+            self.log("An error occurred attempting to parse RA,Dec values:")
+            raise Telescope.PreparationException()
 
         self.api_params = dict(
             project_id=self.projectid,
             secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
-            ra=pointing.ra.deg,
-            dec=pointing.dec.deg,
+            ra=observation.pointings[0].ra.deg,
+            dec=observation.pointings[0].dec.deg,
             avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
             tileset=self.tileset,
@@ -445,13 +453,15 @@ class MWAGW(MWABase):
     def __str__(self):
         return "MWA GW Configuration"
 
-    def prepare_request(self, observation: Observation):
-        event = observation.decision.event
-        skymap = event.querylatest(self.skymap_path)
-
+    def get_pointings(self, event, createdbefore=None):
+        skymap = event.querylatest(self.skymap_path, createdbefore)
         if not skymap:
             self.log("No skymap was found at the specified path.")
-            raise Telescope.PreparationException()
+            return []
+
+        cachekey = f"MWAGW-pointings-{ hashlib.sha256(skymap.encode()).hexdigest() }"
+        if (pointings := cache.get(cachekey)) is not None:
+            return pointings
 
         # Skymap can be either a Base64 encoding of a fits image or a URL to a fits image
         try:
@@ -467,10 +477,12 @@ class MWAGW(MWABase):
                 "Skymap isn't a URL; assuming it is an embedded FITS object encoded as Base64",
                 f"skymap={skymap}",
             )
-            skymap = Table.read(BytesIO(b64decode(skymap)))
-        except Exception as e:
-            self.log("An error occurred attempting to read the skymap", e)
-            raise Telescope.PreparationException() from e
+            try:
+                skymap = Table.read(BytesIO(b64decode(skymap)))
+            except Exception as e:
+                logger.warning(f"Unable to parse skymap: skymap={skymap[:250]}")
+                self.log("An error occurred attempting to read the skymap", e)
+                return cache.get_or_set(cachekey, [], timeout=None)
 
         try:
             # Calculate 4 pointings that:
@@ -504,11 +516,13 @@ class MWAGW(MWABase):
                 if len(pointings) >= 4:
                     break
         except Exception as e:
+            logger.warning(f"Unable to generate 4 sweetspot pointings: skymap={skymap[:250]}")
             self.log(
-                "An error occurred attempting to generate 4 sweetspot pointintings",
+                "An error occurred attempting to generate 4 sweetspot pointings",
                 e,
             )
-            raise Telescope.PreparationException() from e
+            cache.set(cachekey, [])
+            return cache.get_or_set(cachekey, [], timeout=None)
 
         self.log(
             "Determined 4 MWA sweetspots to observe",
@@ -517,15 +531,18 @@ class MWAGW(MWABase):
 
         # Convert from local to sky coordinates
         pointings = [p.transform_to(ICRS()) for p in pointings]
+        return cache.get_or_set(cachekey, pointings, timeout=None)
 
-        observation.pointings = pointings
+    def prepare_request(self, observation: Observation):
+        if len(observation.pointings) != 4:
+            raise Telescope.PreparationException()
 
         self.api_params = dict(
             project_id=self.projectid,
             secure_key=self.secure_key,
             calibrator=True,  # Hard-coded to always make a calibrator observation.
-            ra=[p.ra.deg for p in pointings],
-            dec=[p.dec.deg for p in pointings],
+            ra=[p.ra.deg for p in observation.pointings],
+            dec=[p.dec.deg for p in observation.pointings],
             avoidsun=True,  # Hard-coded to always place sun in null.
             freqspecs=json.dumps(self.frequency.split()),
             subarrays=["all_ne", "all_nw", "all_se", "all_sw"],
@@ -629,6 +646,14 @@ class ATCA(Telescope):
     def __str__(self):
         return "ATCA Configuration"
 
+    def get_pointings(self, event, createdbefore=None):
+        try:
+            ra = event.querylatest(self.ra_path, createdbefore)
+            dec = event.querylatest(self.dec_path, createdbefore)
+            return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
+        except (TypeError, ValueError):
+            return []
+
     def prepare_request(self, observation: Observation):
         def minutes_to_hms(minutes: float) -> str:
             h = int(minutes // 60)
@@ -641,16 +666,9 @@ class ATCA(Telescope):
 
             return f"{h:02d}:{m:02d}:{s:02d}"
 
-        try:
-            event = observation.decision.event
-            ra = event.querylatest(self.ra_path)
-            dec = event.querylatest(self.dec_path)
-            pointing = SkyCoord(float(ra), float(dec), unit=("deg", "deg"))
-        except Exception as e:
-            self.log("An error occurred attempting to parse RA,Dec values", e)
-            raise Telescope.PreparationException() from e
-
-        observation.pointings = [pointing]
+        if len(observation.pointings) != 1:
+            self.log("An error occurred attempting to parse RA,Dec values:")
+            raise Telescope.PreparationException()
 
         istest = not self.trigger.active
 
@@ -673,8 +691,8 @@ class ATCA(Telescope):
             project=self.projectid,
             minExposureLength=minutes_to_hms(self.minimum_exposure),
             maxExposureLength=minutes_to_hms(self.maximum_exposure),
-            rightAscension=pointing.ra.to_string(unit=hourangle, sep=":"),
-            declination=pointing.dec.to_string(sep=":"),
+            rightAscension=observation.pointings[0].ra.to_string(unit=hourangle, sep=":"),
+            declination=observation.pointings[0].dec.to_string(sep=":"),
             scanType="Dwell",
         )
 

@@ -85,6 +85,7 @@ class Command(BaseCommand):
                             cache.set(
                                 "gcn_heartbeat_received",
                                 datetime.datetime.now(datetime.UTC),
+                                timeout=None
                             )
                             cache.set("gcn_heartbeat_created", created)
                             consumer.commit(message)

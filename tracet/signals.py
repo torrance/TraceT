@@ -10,26 +10,27 @@ logger = logging.getLogger(__name__)
 
 
 def resync_events(trigger: models.Trigger):
-    # Keep a record of all matching events
-    events = dict()
+    # First, set all events to disabled
+    trigger.events.update(disabled=True)
+
+    # Remove notices from events: we'll add them back again with the updated topic criteria
+    for event in trigger.events.all():
+        event.notices.clear()
+
+    # And delete all simulated decisions
+    models.Decision.objects.filter(
+        event__trigger__id=trigger.id, source=models.Decision.Source.SIMULATED
+    ).delete()
 
     # Create events that match the topic and eventid criteria
-    for notice in models.Notice.objects.filter(topic__in=trigger.topics.all()):
-        event = trigger.get_or_create_event(notice)
-        if event:
-            events[event.id] = event
+    for notice in models.Notice.objects.filter(topic__in=trigger.topics.all()).order_by(
+        "-created"
+    ):
+        trigger.get_or_create_event(notice)
 
-    # Delete any events that no longer match the topic/eventid criteria
-    trigger.events.exclude(id__in=events.keys()).delete()
-
-    # Set or update event time
-    for event in events.values():
+    # Set of update event time
+    for event in models.Event.objects.filter(trigger_id=trigger.id):
         event.updatetime()
-
-    # Clear out simulated decisions
-    models.Decision.objects.filter(
-        event__id__in=events.keys(), source=models.Decision.Source.SIMULATED
-    ).delete()
 
 
 @receiver(post_save, sender=models.Trigger)

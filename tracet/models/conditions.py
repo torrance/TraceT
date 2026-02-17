@@ -127,9 +127,11 @@ class Decision(models.Model):
              */
             SELECT tracet_decision.* FROM tracet_decision
             LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
+            LEFT JOIN tracet_event ON tracet_decision.event_id = tracet_event.id
             WHERE
                 tracet_decision.source <> "simulated" AND
-                tracet_observation.status = "api_ok"
+                tracet_observation.status = "api_ok" AND
+                NOT tracet_event.disabled
             GROUP BY tracet_decision.event_id
             HAVING MAX(tracet_observation.created)
 
@@ -141,8 +143,10 @@ class Decision(models.Model):
              */
             SELECT tracet_decision.* FROM tracet_decision
             LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
+            LEFT JOIN tracet_event ON tracet_decision.event_id = tracet_event.id
             WHERE
                 tracet_decision.source <> "simulated" AND
+                NOT tracet_event.disabled AND
                 tracet_decision.event_id NOT IN (
                     SELECT event_id FROM tracet_decision
                     LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
@@ -160,8 +164,10 @@ class Decision(models.Model):
              */
             SELECT tracet_decision.* FROM tracet_decision
             LEFT JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id
+            LEFT JOIN tracet_event ON tracet_decision.event_id = tracet_event.id
             WHERE
                 tracet_decision.source <> "simulated" AND
+                NOT tracet_event.disabled AND
                 tracet_decision.event_id NOT IN (
                     SELECT tracet_decision.event_id FROM tracet_decision
                     INNER JOIN tracet_observation ON tracet_decision.id = tracet_observation.decision_id  /* INNER JOIN requires an observation to exist */

@@ -78,6 +78,7 @@
                 <th>Received</th>
                 <th style="text-align: left;">Topic</th>
                 <th style="width: 100%"></th>
+                <th>Pointing(s)</th>
                 <th colspan="{{ event.noticess.0.decision.factors.all | length }}">Current conditions</th>
             </tr>
         </thead>
@@ -87,9 +88,20 @@
                 <td>{{ notice.received | iso8601 }}</td>
                 <td style="text-align: left"><code>{{ notice.topic.name }}</code></td>
                 <td><a href="{{ notice.get_absolute_url }}">View notice</a></td>
-                <td>{% for factor in notice.decision.factors.all %}
-                    {{ factor.html }}
-                {% endfor %}</td>
+                <td style="font-family: monospace;">
+                    {% for pointing in notice.pointings %}
+                        ({{ pointing.ra.deg | floatformat:3 }}&deg;, {{ pointing.dec.deg | floatformat:3 }}&deg;)
+                        {% if forloop.counter == 2 %}<br>{% endif %}
+                    {% empty %}
+                        &mdash;
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for factor in notice.decision.factors.all %}
+                        {{ factor.html }}
+                    {% empty %}
+                        &mdash;
+                    {% endfor %}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -142,6 +154,8 @@
         </tbody>
     </table>
 </div>
+{% empty %}
+<p>There are no events.</p>
 {% endfor %}
 
 <footer>
