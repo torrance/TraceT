@@ -390,8 +390,8 @@ class TriggerView(View):
                 )
                 notice.decision = decision
 
-            if telescope:
-                notice.pointings = telescope.get_pointings(event, notice.created)
+                if telescope:
+                    notice.pointings = telescope.get_pointings(event, notice.created)
 
             event.form = forms.EventTrigger(initial={"eventid": event.id})
 
