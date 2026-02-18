@@ -23,8 +23,6 @@ ExecStart=/usr/bin/podman compose --profile prod run gunicorn bash -c "uv run ./
 # Migrations may take a long time: thus we extend the timeout to 10 minutes
 TimeoutStartSec=600
 Restart=no
-StandardOutput=append:%h/tracet-systemd/init.log
-StandardError=inherit
 
 [Install]
 WantedBy=default.target
