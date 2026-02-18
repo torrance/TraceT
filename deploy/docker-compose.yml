@@ -16,8 +16,6 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
     command: 'uv run ./manage.py runserver 0.0.0.0:8000'
-    environment:
-      - DJANGO_DEBUG=true
     env_file: "secrets.env"
     ports:
       - "8123:8000"
