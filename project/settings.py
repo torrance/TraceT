@@ -30,13 +30,11 @@ DEBUG = True if os.getenv("DJANGO_DEBUG") and truthy(os.getenv("DJANGO_DEBUG")) 
 
 ALLOWED_HOSTS = [
     "localhost",
-    "203.101.225.0",
-    "tracet2.duckdns.org",
 ]
+if os.getenv("HOSTNAME"):
+    ALLOWED_HOSTS.append(os.getenv("HOSTNAME"))
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://tracet2.duckdns.org",
-]
+CSRF_TRUSTED_ORIGINS = ["https://" + host for host in ALLOWED_HOSTS]
 
 
 # Application definition

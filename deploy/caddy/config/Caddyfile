@@ -1,4 +1,4 @@
-tracet2.duckdns.org {
+{$HOSTNAME:localhost} {
 	handle_path /static/* {
 		root * /tracet/static/
 		file_server

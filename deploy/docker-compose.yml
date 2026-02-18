@@ -37,6 +37,7 @@ services:
   caddy:
     profiles: ["prod"]
     image: docker.io/library/caddy:latest
+    env_file: "secrets.env"
     ports:
       - "8000:80"
       - "8443:443"
